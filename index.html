@@ -55,6 +55,26 @@ nav.main a.on{color:var(--gold-ink);background:var(--gold)}
 .levels button{border:0;background:none;padding:5px 11px;border-radius:999px;font-size:12.5px;font-weight:600;color:var(--muted);cursor:pointer}
 .levels button.on{background:var(--raise);color:var(--gold-2);box-shadow:inset 0 0 0 1px var(--line-2)}
 .levels .s{display:none}
+.levels .help{width:26px;padding:5px 0;border-radius:50%;font-family:var(--f-mono);color:var(--gold)}
+.levels .help[aria-expanded=true]{background:var(--gold);color:var(--gold-ink)}
+.lvhelp{border-bottom:1px solid var(--line);background:var(--surface)}
+.lvhelp .wrap{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;padding-block:14px 16px}
+.lvhelp button.lvc{text-align:left;align-content:start;align-self:stretch;border:1px solid var(--line-2);background:var(--bg);border-radius:10px;padding:12px 14px;cursor:pointer;display:grid;gap:4px;font-size:13.5px;color:var(--muted);line-height:1.5}
+.lvhelp button.lvc b{color:var(--fg);font-size:14.5px}
+.lvhelp button.lvc.on{border-color:var(--gold);background:color-mix(in srgb,var(--gold) 8%,var(--bg))}
+.lvhelp button.lvc.on b{color:var(--gold-2)}
+.lvhelp p.foot{grid-column:1/-1;font-size:12.5px;color:var(--faint)}
+@media (max-width:760px){.lvhelp .wrap{grid-template-columns:1fr;gap:8px}}
+.toast{position:fixed;left:50%;width:max-content;bottom:calc(24px + env(safe-area-inset-bottom,0px));transform:translate(-50%,20px);opacity:0;z-index:50;background:var(--raise);border:1px solid var(--gold);color:var(--fg);padding:10px 16px;border-radius:10px;font-size:14px;max-width:min(92vw,560px);transition:opacity .25s,transform .25s;pointer-events:none;box-shadow:0 8px 24px rgba(0,0,0,.4)}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+.toast b{color:var(--gold-2)}
+@media (max-width:860px){.toast{bottom:calc(76px + env(safe-area-inset-bottom,0px))}}
+.depth{margin-top:16px;border:1px solid var(--line);border-left:3px solid var(--gold);border-radius:0 10px 10px 0;background:var(--surface);padding:12px 16px;font-size:15px;line-height:1.65;max-width:80ch}
+.depth .eyebrow{display:block;margin-bottom:4px}
+.depth.flash{animation:flash 1s ease}
+@keyframes flash{0%{background:color-mix(in srgb,var(--gold) 22%,var(--surface))}100%{background:var(--surface)}}
+.blk{touch-action:none}
+.ghost{position:fixed;z-index:60;pointer-events:none;opacity:.92;transform:translate(-50%,-50%) rotate(-2deg);box-shadow:0 10px 26px rgba(0,0,0,.5)}
 nav.bottom{display:none;position:fixed;left:0;right:0;bottom:0;z-index:30;background:var(--surface);border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom,0px)}
 nav.bottom a{flex:1;text-align:center;padding:12px 4px 13px;font-size:12.5px;border-radius:0;position:relative}
 nav.bottom a.on{color:var(--gold)}
@@ -226,7 +246,7 @@ select{width:auto}
 .frames .scene{font-size:26px;letter-spacing:0}
 .mopts{display:grid;gap:8px}
 .mopt{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;align-items:center;text-align:left;border:1px solid var(--line-2);background:var(--bg);padding:11px 14px;border-radius:10px;cursor:pointer;font-size:14.5px}
-.mopt:hover:not([aria-disabled=true]){border-color:var(--gold)}
+.mopt:hover:not(.done){border-color:var(--gold)}
 .mopt.right{border-color:var(--ok);background:color-mix(in srgb,var(--ok) 10%,var(--bg))}
 .mopt.wrong{border-color:var(--bad);background:color-mix(in srgb,var(--bad) 10%,var(--bg))}
 .mopt .why{grid-column:1/-1;font-size:13px;color:var(--muted)}
@@ -293,9 +313,19 @@ pre.diag{font:12.5px/1.6 var(--f-mono);color:var(--gold-2);background:var(--bg);
       <button data-lv="0"><span class="l">Simple</span><span class="s">L1</span></button>
       <button data-lv="1"><span class="l">Technical</span><span class="s">L2</span></button>
       <button data-lv="2"><span class="l">Deep Dive</span><span class="s">L3</span></button>
+      <button class="help" id="lv-help" aria-expanded="false" aria-controls="lvhelp" title="What do the depth levels mean?">?</button>
+    </div>
+  </div>
+  <div class="lvhelp" id="lvhelp" hidden>
+    <div class="wrap">
+      <button class="lvc" data-lv="0"><b>Simple</b>Plain language and everyday examples. No maths or jargon.</button>
+      <button class="lvc" data-lv="1"><b>Technical</b>Tokens, embeddings, encoders, attention, alignment and training objectives.</button>
+      <button class="lvc" data-lv="2"><b>Deep Dive</b>Architecture choices, contrastive and autoregressive objectives, fusion, evaluation and limits.</button>
+      <p class="foot">The depth you pick changes the explanations everywhere: the pipeline on Home, all 10 lessons, the notes under every lab, and the passages Ask returns. The interactive parts stay the same.</p>
     </div>
   </div>
 </header>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
 
 <main class="wrap">
 
@@ -325,6 +355,7 @@ pre.diag{font:12.5px/1.6 var(--f-mono);color:var(--gold-2);background:var(--bg);
   <div class="block">
     <header><div><div class="eyebrow">The multimodal pipeline</div><h2>From raw data to a better model</h2></div><span class="tag">Training loop</span></header>
     <div class="pipe" id="pipe"></div>
+    <div class="depth" data-depth="pipe"></div>
   </div>
 
   <div class="block">
@@ -400,6 +431,7 @@ pre.diag{font:12.5px/1.6 var(--f-mono);color:var(--gold-2);background:var(--bg);
         <div class="legend" id="em-leg"></div>
       </div>
     </div>
+    <div class="depth" data-depth="embed"></div>
   </div>
 
   <div class="lab" id="lab-video" hidden>
@@ -415,11 +447,13 @@ pre.diag{font:12.5px/1.6 var(--f-mono);color:var(--gold-2);background:var(--bg);
       </div>
       <p class="lvtext" id="vd-say"></p>
     </div>
+    <div class="depth" data-depth="video"></div>
   </div>
 
   <div class="lab" id="lab-match" hidden>
     <div class="labhead"><div><div class="eyebrow">Lab 4 · Cross-Modal Match</div><h2>Which one goes with this?</h2><p>Six rounds. Each shows an input in one modality; pick its match in another. Distractors are deliberately close, the way hard negatives are in training.</p></div><div class="dots" id="mt-dots"></div></div>
     <div class="bench" id="mt-body"></div>
+    <div class="depth" data-depth="match"></div>
   </div>
 
   <div class="lab" id="lab-train" hidden>
@@ -442,6 +476,7 @@ pre.diag{font:12.5px/1.6 var(--f-mono);color:var(--gold-2);background:var(--bg);
       </div>
     </div>
     <p class="lvtext" id="tr-say" style="max-width:80ch"></p>
+    <div class="depth" data-depth="train"></div>
   </div>
 
   <div class="lab" id="lab-arch" hidden>
@@ -457,6 +492,7 @@ pre.diag{font:12.5px/1.6 var(--f-mono);color:var(--gold-2);background:var(--bg);
       <pre class="diag" id="fu-diag"></pre>
       <p class="lvtext" id="fu-say"></p>
     </div>
+    <div class="depth" data-depth="arch"></div>
   </div>
 </section>
 
@@ -475,7 +511,7 @@ pre.diag{font:12.5px/1.6 var(--f-mono);color:var(--gold-2);background:var(--bg);
 <section class="view" id="v-ask" hidden>
   <div class="ask">
     <div>
-      <div class="labhead" style="margin-bottom:10px"><div><div class="eyebrow">Ask the lessons</div><h2>Ask a question about multimodal AI</h2><p>Answers come from this app's own lesson text, matched on your device. No AI model, no internet, no cost. If a question is outside the lessons, it says so.</p></div><span class="tag real">Offline search</span></div>
+      <div class="labhead" style="margin-bottom:10px"><div><div class="eyebrow">Ask the lessons</div><h2>Ask a question about multimodal AI</h2><p>Answers come from this app's own lesson text, matched on your device, at the depth you have chosen. No AI model, no internet, no cost. If a question is outside the lessons, it says so.</p></div><span class="tag real">Offline search</span></div>
       <div class="log" id="ask-log"></div>
       <form class="askbar" id="ask-form"><input type="text" id="ask-in" placeholder="e.g. Why does video need more tokens?" autocomplete="off" aria-label="Your question"><button class="btn gold" type="submit">Ask</button></form>
     </div>
@@ -649,9 +685,37 @@ function go(v,lab,noHash){
 document.addEventListener('click',function(e){var a=e.target.closest('[data-go]');if(!a)return;e.preventDefault();go(a.dataset.go,a.dataset.lab)});
 
 /* levels */
-function setLevel(n){state.level=n;save();$$('.levels button').forEach(function(b){b.classList.toggle('on',+b.dataset.lv===n)});
-  if(cur.view==='lessons')renderLesson();if(inited.explore)renderExplorer();}
-$$('.levels button').forEach(function(b){b.onclick=function(){setLevel(+b.dataset.lv)}});
+var LVDESC=['Plain language and everyday examples','Tokens, embeddings, encoders, attention and training objectives','Architecture choices, objectives, fusion, evaluation and limits'];
+var DEPTH={
+ pipe:['Data comes in and is turned into numbers. The model makes a guess, checks how wrong it was, and adjusts itself to do a little better. This repeats millions of times.',
+  'Raw inputs are preprocessed and tokenized per modality, encoded into embeddings, and aligned in a shared space. The model makes a prediction, a loss function scores it, backpropagation computes gradients, and an optimizer updates the parameters.',
+  'In practice the loop runs in stages: encoder pre-training, alignment with a trainable projector, then instruction tuning, sometimes followed by preference optimization. Each stage has its own objective (contrastive, next-token or masked reconstruction), data mix and learning-rate schedule.'],
+ embed:['Think of a map where similar things sit close together. Training moves a photo of a dog, the words "a dog on a beach" and the sound of barking next to each other, even though they started far apart.',
+  'Each point is an embedding vector shown in 2-D. A contrastive objective raises the cosine similarity of matched pairs and lowers it for the other items in the batch, so clusters form by concept rather than by modality. The neighbour list shows cosine similarity to the selected point.',
+  'Real embedding spaces have hundreds or thousands of dimensions, and 2-D projections such as PCA, t-SNE or UMAP distort distances. Contrastive models also show a "modality gap": image and text embeddings often stay in separate regions even after training, so a match is close relative to the alternatives rather than overlapping.'],
+ video:['A photo shows one moment. A video shows what changes: the bike slows down, stops, and then the bell rings. You need time to know that.',
+  'Video models sample a few frames per second and encode space and time together, often with tubelets or attention across frames. Motion and event order are learned from how features change between frames, and audio adds a second signal aligned in time.',
+  'The token budget grows with frames × patches, so video models use sparse frame sampling, factorized space-time attention and token merging. Many video benchmarks can be partly solved from one key frame, which is why tests of temporal order and counting matter.'],
+ match:['You are doing what the model learns to do: link things that mean the same across different senses, like a sound and the scene that makes it.',
+  'Each round mirrors a training pair. The wrong options are hard negatives: they share objects or sounds with the right answer but differ in action, place or timing, which forces the model to align finer details.',
+  'In contrastive training every other item in the batch acts as a negative, and a few hard negatives carry most of the learning signal. Mining them improves fine-grained matching but risks false negatives, where a "wrong" pair is actually a valid match.'],
+ train:['The model guesses which picture goes with which word, measures how wrong it was, and nudges its numbers to do better. Watch the squares move onto their circles as the loss line drops.',
+  'Each step projects the image vectors with a 2×2 weight matrix, scores every image against every text with dot products divided by the temperature, applies a softmax, and takes the cross-entropy against the true pair (InfoNCE loss). Backpropagation gives the gradient for the four weights, and gradient descent updates them.',
+  'Only the image-side projection trains here, and the text side is frozen, like tuning a projector on top of fixed encoders. Real CLIP-style training is symmetric (image-to-text and text-to-image losses), learns the temperature, uses batches of thousands, and relies on optimizers such as AdamW with warmup and decay.'],
+ arch:['Each kind of data gets its own reader, called an encoder. Their outputs are placed in one shared space, and a reasoning model uses that to answer.',
+  'Modality encoders produce feature vectors. A projection maps them into the width and space the language model expects, and the language model attends over text and projected features together to generate an answer. Loss and optimizer act only during training.',
+  'Choices here trade cost against how deeply modalities interact. Frozen encoders plus a small projector are cheap to train; cross-attention adds parameters for deeper fusion; early fusion needs interleaved data at scale. Token compression, such as resamplers or pooling, decides how much visual detail reaches the model.']
+};
+function renderDepth(flash){$$('[data-depth]').forEach(function(el){var k=el.dataset.depth;el.innerHTML='<span class="eyebrow">'+LV[state.level]+' explanation</span>'+esc(DEPTH[k][state.level]);if(flash){el.classList.remove('flash');void el.offsetWidth;el.classList.add('flash')}})}
+var toastT=0;function toast(h){var t=$('#toast');t.innerHTML=h;t.classList.add('show');clearTimeout(toastT);toastT=setTimeout(function(){t.classList.remove('show')},2600)}
+function setLevel(n,user){state.level=n;save();$$('.levels button[data-lv]').forEach(function(b){var on=+b.dataset.lv===n;b.classList.toggle('on',on);b.setAttribute('aria-pressed',on)});
+  $$('#lvhelp .lvc').forEach(function(b){b.classList.toggle('on',+b.dataset.lv===n)});
+  renderDepth(user);
+  if(cur.view==='lessons')renderLesson();if(inited.explore)renderExplorer();
+  if(user)toast('<b>'+LV[n]+'</b> · '+LVDESC[n]+'. Explanations updated.');}
+$$('.levels button[data-lv]').forEach(function(b){b.onclick=function(){setLevel(+b.dataset.lv,true)}});
+$$('#lvhelp .lvc').forEach(function(b){b.onclick=function(){setLevel(+b.dataset.lv,true)}});
+$('#lv-help').onclick=function(){var p=$('#lvhelp');p.hidden=!p.hidden;this.setAttribute('aria-expanded',!p.hidden)};
 
 /* ---------------- HOME ---------------- */
 function initHome(){
@@ -695,12 +759,11 @@ function drawHero(dt,still){
 function heroLoop(t){var dt=heroLast?Math.min(50,t-heroLast):16;heroLast=t;drawHero(dt);heroRaf=requestAnimationFrame(heroLoop)}
 
 /* ---------------- LESSONS ---------------- */
-var lessonLv=null;
 function renderLesson(){
-  var i=state.lesson||0,L=LESSONS[i],lv=lessonLv===null?state.level:lessonLv;
+  var i=state.lesson||0,L=LESSONS[i],lv=state.level;
   var done=state.done.length;
   $('#llist').innerHTML='<div class="prog">'+done+' of 10 lessons complete<div class="bar"><i style="width:'+done*10+'%"></i></div></div>'+LESSONS.map(function(x,j){return '<button class="'+(j===i?'on ':'')+(state.done.indexOf(j)>=0?'done':'')+'" data-l="'+j+'"><span class="n">'+String(j+1).padStart(2,'0')+'</span><span class="t">'+esc(x.t)+'</span><span class="ck">'+(state.done.indexOf(j)>=0?'✓':'')+'</span></button>'}).join('');
-  $$('#llist button').forEach(function(b){b.onclick=function(){state.lesson=+b.dataset.l;lessonLv=null;save();renderLesson();window.scrollTo(0,0)}});
+  $$('#llist button').forEach(function(b){b.onclick=function(){state.lesson=+b.dataset.l;save();renderLesson();window.scrollTo(0,0)}});
   var labName=L.lab==='ask'?'Ask the lessons':(LABS.filter(function(p){return p[0]===L.lab.split(':')[0]})[0]||[])[1];
   var isDone=state.done.indexOf(i)>=0;
   $('#lesson').innerHTML='<div class="eyebrow">Lesson '+(i+1)+' of 10</div><h2>'+esc(L.t)+'</h2>'+
@@ -710,13 +773,13 @@ function renderLesson(){
    '<div class="acts"><button class="btn gold" id="ls-try">Try it: '+esc(labName)+'</button></div>'+
    '<div class="check"><h3>Check your understanding</h3><div id="ls-q0"></div><div id="ls-q1"></div></div>'+
    '<div class="acts" style="margin-top:28px">'+(i>0?'<button class="btn" id="ls-prev">← Previous</button>':'')+'<button class="btn '+(isDone?'':'gold')+'" id="ls-done">'+(isDone?'Completed ✓':'Mark complete')+'</button>'+(i<9?'<button class="btn" id="ls-next">Next lesson →</button>':'')+'</div>';
-  $$('.lvl-tabs button',$('#lesson')).forEach(function(b){b.onclick=function(){lessonLv=+b.dataset.k;renderLesson()}});
+  $$('.lvl-tabs button',$('#lesson')).forEach(function(b){b.onclick=function(){setLevel(+b.dataset.k,true)}});
   var qs=QUIZ.filter(function(q){return q.l===i});
   qs.forEach(function(q,k){renderQ(q,$('#ls-q'+k))});
   $('#ls-try').onclick=function(){var p=L.lab.split(':');if(p[0]==='ask'){go('ask');return}if(p[1])exMod=MODS.map(function(m){return m.k}).indexOf(p[1]);go('labs',p[0])};
   $('#ls-done').onclick=function(){if(state.done.indexOf(i)<0)state.done.push(i);save();renderLesson()};
-  if($('#ls-prev'))$('#ls-prev').onclick=function(){state.lesson=i-1;lessonLv=null;save();renderLesson();window.scrollTo(0,0)};
-  if($('#ls-next'))$('#ls-next').onclick=function(){if(state.done.indexOf(i)<0)state.done.push(i);state.lesson=i+1;lessonLv=null;save();renderLesson();window.scrollTo(0,0)};
+  if($('#ls-prev'))$('#ls-prev').onclick=function(){state.lesson=i-1;save();renderLesson();window.scrollTo(0,0)};
+  if($('#ls-next'))$('#ls-next').onclick=function(){if(state.done.indexOf(i)<0)state.done.push(i);state.lesson=i+1;save();renderLesson();window.scrollTo(0,0)};
 }
 function renderQ(q,host,onDone){
   delete host.dataset.done;
@@ -1007,7 +1070,7 @@ function renderMatch(){
   $$('#mt-body .play').forEach(function(b){b.onclick=function(e){e.stopPropagation();play(b.dataset.snd)}});
   var sc2=$('#mt-sensor');if(sc2){var F=fit(sc2,0.35,90,140),x=F.x,w=F.w,h=F.h;x.strokeStyle=cv('--m-sensor');x.lineWidth=1.4;x.beginPath();for(var i=0;i<=300;i++){var t=i/60,v=Math.sin(2*Math.PI*2*t)*0.7+0.25*Math.sin(2*Math.PI*4*t+0.5)+0.05*Math.sin(i*1.3);var xx=w*i/300,yy=h/2-v*h*0.35;if(i===0)x.moveTo(xx,yy);else x.lineTo(xx,yy)}x.stroke()}
   function choose(el){if($('#mt-body').dataset.lock==='1')return;$('#mt-body').dataset.lock='1';var j=+el.dataset.j,ok=R.opts[j][1]===1;mtRes[mtI]=ok;
-    $$('#mt-body .mopt').forEach(function(o){var k=+o.dataset.j;o.setAttribute('aria-disabled','true');var why=$('.why',o);why.hidden=false;why.textContent=R.opts[k][2];if(R.opts[k][1])o.classList.add('right');else if(k===j)o.classList.add('wrong')});
+    $$('#mt-body .mopt').forEach(function(o){var k=+o.dataset.j;o.classList.add('done');o.removeAttribute('tabindex');var why=$('.why',o);why.hidden=false;why.textContent=R.opts[k][2];if(R.opts[k][1])o.classList.add('right');else if(k===j)o.classList.add('wrong')});
     $('#mt-next').hidden=false;$('#mt-next').onclick=function(){mtI++;renderMatch()};$('#mt-dots').children[mtI].className=ok?'ok':'no'}
   $('#mt-body').dataset.lock='0';
   $$('#mt-body .mopt').forEach(function(o){o.onclick=function(){choose(o)};o.onkeydown=function(e){if(e.key==='Enter'||e.key===' '){e.preventDefault();choose(o)}}});
@@ -1075,16 +1138,25 @@ function initArch(){renderArch();initFusion()}
 function blkById(id){return BLK.filter(function(b){return b[0]===id})[0]}
 function renderArch(){
   var used=Object.keys(arPlaced).map(function(k){return arPlaced[k]});
-  $('#ar-pal').innerHTML=BLK.filter(function(b){return used.indexOf(b[0])<0}).map(function(b){return '<div class="blk'+(arSel===b[0]?' sel':'')+'" draggable="true" tabindex="0" role="button" data-b="'+b[0]+'" style="border-left:3px solid var('+b[2]+')">'+b[1]+'</div>'}).join('')||'<span class="muted" style="font-size:13px">All blocks placed. Two stay unused in a correct pipeline.</span>';
+  $('#ar-pal').innerHTML=BLK.filter(function(b){return used.indexOf(b[0])<0}).map(function(b){return '<div class="blk'+(arSel===b[0]?' sel':'')+'" tabindex="0" role="button" data-b="'+b[0]+'" style="border-left:3px solid var('+b[2]+')">'+b[1]+'</div>'}).join('')||'<span class="muted" style="font-size:13px">All blocks placed. Two stay unused in a correct pipeline.</span>';
   function slot(id,label){var b=arPlaced[id];return '<div class="slot'+(b?' filled':'')+(id==='proj'||id==='llm'?' tall':'')+'" data-s="'+id+'" tabindex="0" role="button" aria-label="Slot: '+label+'">'+(b?esc(blkById(b)[1]):label)+'</div>'}
   $('#ar-flow').className='flow';
   $('#ar-flow').innerHTML='<div class="col">'+SLOTS.map(function(s){return '<div class="inp" style="--c:var('+s[3]+')">'+s[1]+' input</div>'}).join('')+'</div><div class="col">'+SLOTS.map(function(s){return slot(s[0],'Drop '+s[1].toLowerCase()+' encoder')}).join('')+'</div><div class="col">'+slot('proj','Drop: shared representation')+slot('llm','Drop: reasoning stage')+'<div class="inp" style="--c:var(--gold)">Answer · caption · action</div></div>';
-  $$('#ar-pal .blk').forEach(function(el){el.onclick=function(){arSel=arSel===el.dataset.b?null:el.dataset.b;renderArch()};el.onkeydown=function(e){if(e.key==='Enter'||e.key===' '){e.preventDefault();el.click()}};el.ondragstart=function(e){try{e.dataTransfer.setData('text/plain',el.dataset.b)}catch(_){}arSel=el.dataset.b}});
+  $$('#ar-pal .blk').forEach(function(el){
+    var st=null,gh=null,hot=null;
+    function slotAt(x,y){var t=document.elementFromPoint(x,y);return t&&t.closest?t.closest('#ar-flow .slot'):null}
+    el.onpointerdown=function(e){if(e.button>0)return;st={x:e.clientX,y:e.clientY};try{el.setPointerCapture(e.pointerId)}catch(_){}};
+    el.onpointermove=function(e){if(!st)return;if(!gh&&Math.hypot(e.clientX-st.x,e.clientY-st.y)>6){gh=el.cloneNode(true);gh.classList.add('ghost');document.body.appendChild(gh)}
+      if(gh){gh.style.left=e.clientX+'px';gh.style.top=e.clientY+'px';var s2=slotAt(e.clientX,e.clientY);if(hot&&hot!==s2)hot.classList.remove('hot');if(s2){s2.classList.add('hot');hot=s2}else hot=null}};
+    el.onpointerup=function(e){if(!st)return;st=null;
+      if(gh){gh.remove();gh=null;var s2=slotAt(e.clientX,e.clientY);if(s2){arPlaced[s2.dataset.s]=el.dataset.b;arSel=null;$('#ar-msg').textContent=''}renderArch()}
+      else{arSel=arSel===el.dataset.b?null:el.dataset.b;renderArch()}};
+    el.onpointercancel=function(){st=null;if(gh){gh.remove();gh=null}if(hot)hot.classList.remove('hot')};
+    el.onkeydown=function(e){if(e.key==='Enter'||e.key===' '){e.preventDefault();arSel=arSel===el.dataset.b?null:el.dataset.b;renderArch()}}});
   $$('#ar-flow .slot').forEach(function(el){var id=el.dataset.s;
     el.onclick=function(){if(arSel){arPlaced[id]=arSel;arSel=null}else if(arPlaced[id]){delete arPlaced[id]}$('#ar-msg').textContent='';renderArch()};
     el.onkeydown=function(e){if(e.key==='Enter'||e.key===' '){e.preventDefault();el.click()}};
-    el.ondragover=function(e){e.preventDefault();el.classList.add('hot')};el.ondragleave=function(){el.classList.remove('hot')};
-    el.ondrop=function(e){e.preventDefault();var b='';try{b=e.dataTransfer.getData('text/plain')}catch(_){}b=b||arSel;if(b){arPlaced[id]=b;arSel=null;renderArch()}}});
+    });
   if(arSel)$$('#ar-flow .slot').forEach(function(el){if(!arPlaced[el.dataset.s])el.classList.add('hot')});
   $('#ar-check').onclick=checkArch;$('#ar-reset').onclick=function(){arPlaced={};arSel=null;$('#ar-msg').textContent='';renderArch()};
 }
@@ -1137,7 +1209,7 @@ function initAsk(){buildKB();
 function ask(q){var log=$('#ask-log');log.insertAdjacentHTML('beforeend','<div class="msg u">'+esc(q)+'</div>');
   var r=search(q),html;
   if(!r.length||r[0].s<1.2){html='<div class="msg a">I could not find that in the lessons. This lab only answers from its own content, so it will not guess. Try rephrasing with terms like <i>embedding</i>, <i>spectrogram</i>, <i>tubelet</i>, <i>contrastive</i> or <i>fusion</i>, or pick a suggestion.<div class="src"><span class="tag">No match</span></div></div>'}
-  else{var d=KB[r[0].i],rel=[],seenT={};seenT[d.title]=1;r.slice(1).forEach(function(o){var k=KB[o.i];if(rel.length<3&&!seenT[k.title]&&o.s>r[0].s*0.35){seenT[k.title]=1;rel.push(o.i)}});
+  else{var d=KB[r[0].i];if(d.lesson!=null&&LV.indexOf(d.sub)>=0)d=KB[d.lesson*3+state.level];var rel=[],seenT={};seenT[d.title]=1;r.slice(1).forEach(function(o){var k=KB[o.i];if(rel.length<3&&!seenT[k.title]&&o.s>r[0].s*0.35){seenT[k.title]=1;rel.push(o.i)}});
     html='<div class="msg a">'+esc(d.text)+'<div class="src"><span>Source: '+esc(d.title)+' · '+esc(d.sub)+'</span>'+(d.lesson!=null?'<button class="btn sm" data-open="'+d.lesson+'">Open lesson</button>':'')+(d.mod!=null?'<button class="btn sm" data-mod="'+d.mod+'">Open in explorer</button>':'')+'</div>'+(rel.length?'<div class="rel">'+rel.map(function(i){return '<button class="chip" data-q="'+esc(KB[i].title)+'" data-kb="'+i+'">'+esc(KB[i].title.length>46?KB[i].title.slice(0,44)+'…':KB[i].title)+'</button>'}).join('')+'</div>':'')+'</div>'}
   log.insertAdjacentHTML('beforeend',html);var last=log.lastElementChild;
   $$('[data-open]',last).forEach(function(b){b.onclick=function(){state.lesson=+b.dataset.open;save();go('lessons')}});
