@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="description" content="How AI Senses: an offline learning lab on how multimodal AI learns from text, images, audio, video and more.">
-<title>How AI Senses</title>
+<meta name="description" content="How AI Learns the World: an offline learning lab on how multimodal AI learns from text, images, audio, video and more.">
+<title>How AI Learns the World</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&family=DM+Mono:wght@400;500&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&display=swap">
@@ -45,7 +45,7 @@ p{margin:0}
 header.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:color-mix(in srgb,var(--bg) 90%,transparent);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
 .top .wrap{display:flex;align-items:center;gap:18px;min-height:60px}
 .brand{display:flex;align-items:baseline;gap:10px;text-decoration:none;flex-shrink:0}
-.brand b{font:600 18px/1 var(--f-display);letter-spacing:.12em;white-space:nowrap;color:var(--gold)}
+.brand b{font:600 16px/1.15 var(--f-display);letter-spacing:.1em;text-transform:uppercase;white-space:nowrap;color:var(--gold)}
 .brand small{font-size:12px;color:var(--muted)}
 nav.main{display:flex;gap:2px;margin-left:auto}
 nav.main a,nav.bottom a{text-decoration:none;color:var(--muted);font-weight:500;font-size:14px;padding:8px 12px;border-radius:8px}
@@ -91,6 +91,7 @@ nav.bottom{display:none;position:fixed;left:0;right:0;bottom:0;z-index:30;backgr
 nav.bottom a{flex:1;text-align:center;padding:12px 4px 13px;font-size:12.5px;border-radius:0;position:relative}
 nav.bottom a.on{color:var(--gold)}
 nav.bottom a.on::before{content:"";position:absolute;top:0;left:30%;right:30%;height:2px;background:var(--gold)}
+@media (max-width:1180px){.brand small{display:none}}
 @media (max-width:860px){
   nav.main{display:none}
   .brand small{display:none}
@@ -98,7 +99,7 @@ nav.bottom a.on::before{content:"";position:absolute;top:0;left:30%;right:30%;he
   nav.bottom{display:flex}
   body{padding-bottom:calc(72px + env(safe-area-inset-bottom,0px))}
 }
-@media (max-width:520px){.brand b{font-size:15px;letter-spacing:.08em}.levels .l{display:none}.levels .s{display:inline}.levels button{padding:5px 9px}.top .wrap{gap:10px}}
+@media (max-width:520px){.brand b{font-size:13px;letter-spacing:.06em;white-space:normal;max-width:9.5em;line-height:1.2}.levels .l{display:none}.levels .s{display:inline}.levels button{padding:5px 9px}.top .wrap{gap:10px}}
 
 section.view{padding-block:28px 40px}
 section.view[hidden]{display:none}
@@ -106,7 +107,7 @@ section.view[hidden]{display:none}
 /* home */
 .hero{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.15fr);gap:36px;align-items:center;padding-block:20px 8px}
 .hero .dev{font-size:15px;color:var(--muted);margin-top:4px;letter-spacing:.04em}
-.hero .name{font:700 clamp(36px,5.6vw,60px)/1.05 var(--f-display);letter-spacing:.06em;text-wrap:balance;color:var(--gold);margin-top:14px}
+.hero .name{font:700 clamp(32px,4.8vw,54px)/1.08 var(--f-display);letter-spacing:.04em;text-wrap:balance;color:var(--gold);margin-top:14px}
 .hero h1{font:500 clamp(22px,3vw,30px)/1.25 var(--f-body);margin-top:14px;color:var(--fg)}
 .hero .lead{color:var(--muted);margin-top:14px;max-width:52ch}
 .cta{display:flex;flex-wrap:wrap;gap:10px;margin-top:22px}
@@ -324,7 +325,7 @@ pre.diag{font:12.5px/1.6 var(--f-mono);color:var(--gold-2);background:var(--bg);
 
 <header class="top">
   <div class="wrap">
-    <a class="brand" href="#home" data-go="home"><b>HOW AI SENSES</b><small>A multimodal AI lab</small></a>
+    <a class="brand" href="#home" data-go="home"><b>How AI Learns the World</b><small>A multimodal AI lab</small></a>
     <nav class="main" aria-label="Sections">
       <a href="#home" data-go="home">Home</a>
       <a href="#lessons" data-go="lessons">Lessons</a>
@@ -357,9 +358,9 @@ pre.diag{font:12.5px/1.6 var(--f-mono);color:var(--gold-2);background:var(--bg);
   <div class="hero">
     <div>
       <div class="eyebrow">An offline learning lab · 10 lessons · 6 instruments</div>
-      <div class="name">How AI Senses</div>
+      <div class="name">How AI Learns the World</div>
       <div class="dev">Text · Image · Audio · Video · and more</div>
-      <h1>How one AI system learns from text, images, sound, video and more.</h1>
+      <h1>How one AI system connects text, images, sound, video and more.</h1>
       <p class="lead">Explore how AI learns from the many ways information exists in the world, and how text, images, audio, video and other data become connected inside multimodal AI systems.</p>
       <div class="cta">
         <a class="btn gold" href="#lessons" data-go="lessons">Start Lesson 1</a>
@@ -585,7 +586,7 @@ pre.diag{font:12.5px/1.6 var(--f-mono);color:var(--gold-2);background:var(--bg);
   </div>
 </section>
 
-<footer class="credit"><span>Designed &amp; Architected by Krishnamurthy Kandregula · Made by Claude</span><span>How AI Senses · Krishnamurthy Kandregula Innovation Lab</span></footer>
+<footer class="credit"><span>Designed &amp; Architected by Krishnamurthy Kandregula · Made by Claude</span><span>How AI Learns the World · Krishnamurthy Kandregula Innovation Lab</span></footer>
 </main>
 
 <nav class="bottom" aria-label="Sections">
@@ -1298,7 +1299,7 @@ function pwa(){try{
   cols.forEach(function(c,i){var a=-Math.PI/2+i*2*Math.PI/9,x1=256+180*Math.cos(a),y1=256+180*Math.sin(a);g.strokeStyle=c;g.globalAlpha=0.55;g.lineWidth=6;g.beginPath();g.moveTo(x1,y1);g.lineTo(256+70*Math.cos(a),256+70*Math.sin(a));g.stroke();g.globalAlpha=1;g.fillStyle=c;g.beginPath();g.arc(x1,y1,22,0,7);g.fill()});
   g.strokeStyle='#d8bc7e';g.lineWidth=14;g.beginPath();g.arc(256,256,62,0,7);g.stroke();g.fillStyle='#f0dcae';g.beginPath();g.arc(256,256,22,0,7);g.fill();
   var url=ic.toDataURL('image/png');
-  var man={name:'How AI Senses',short_name:'How AI Senses',description:'Offline lab on how multimodal AI learns from text, images, audio, video and more.',start_url:'./',scope:'./',display:'standalone',background_color:'#0c0b09',theme_color:'#0c0b09',icons:[{src:url,sizes:'512x512',type:'image/png',purpose:'any maskable'}]};
+  var man={name:'How AI Learns the World',short_name:'AI Learns',description:'Offline lab on how multimodal AI learns from text, images, audio, video and more.',start_url:'./',scope:'./',display:'standalone',background_color:'#0c0b09',theme_color:'#0c0b09',icons:[{src:url,sizes:'512x512',type:'image/png',purpose:'any maskable'}]};
   function add(tag,attrs){var el=document.createElement(tag);Object.keys(attrs).forEach(function(k){el.setAttribute(k,attrs[k])});document.head.appendChild(el)}
   add('link',{rel:'manifest',href:'data:application/manifest+json,'+encodeURIComponent(JSON.stringify(man))});
   add('link',{rel:'icon',href:url});add('link',{rel:'apple-touch-icon',href:url});
