@@ -1,0 +1,1177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="How AI Senses: an offline learning lab on how multimodal AI learns from text, images, audio, video and more.">
+<title>How AI Senses</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&family=DM+Mono:wght@400;500&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&display=swap">
+<style>
+/* Layout: Tranzit shell — sticky header, single reading column for lessons, lab bench of tabbed instruments, bottom nav on phones */
+:root{
+  --bg:#0c0b09; --surface:#15130f; --raise:#1d1a15; --line:#2f2a21; --line-2:#433b2e;
+  --fg:#eee8da; --muted:#a69d89; --faint:#746c5c;
+  --gold:#d8bc7e; --gold-2:#f0dcae; --gold-ink:#1a1408; --neg:#6f8fb0;
+  --ok:#8fc39a; --bad:#e08b7a;
+  --m-text:#d8bc7e; --m-image:#7fb2cc; --m-video:#d0907c; --m-audio:#9cc47f; --m-doc:#b9a0da;
+  --m-code:#78c7b2; --m-table:#d9c56f; --m-sensor:#d99fb6; --m-3d:#8ea5dc;
+  --f-display:'Cinzel',Georgia,'Times New Roman',serif;
+  --f-body:'DM Sans',system-ui,-apple-system,'Segoe UI',sans-serif;
+  --f-mono:'DM Mono',ui-monospace,'SFMono-Regular',Menlo,monospace;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html{-webkit-text-size-adjust:100%}
+body{margin:0}
+html,body{background:var(--bg);color:var(--fg)}
+body{font:16px/1.6 var(--f-body);-webkit-font-smoothing:antialiased;padding-bottom:24px}
+a{color:var(--gold)}
+button{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--gold);outline-offset:2px;border-radius:6px}
+h1,h2,h3{text-wrap:balance;margin:0}
+p{margin:0}
+.wrap{max-width:1120px;margin:0 auto;padding-inline:clamp(16px,4vw,32px)}
+.mono{font-family:var(--f-mono)}
+.eyebrow{font:500 11px/1.4 var(--f-mono);letter-spacing:.14em;text-transform:uppercase;color:var(--gold)}
+.muted{color:var(--muted)}
+.tag{display:inline-flex;align-items:center;gap:6px;font:500 10.5px/1 var(--f-mono);letter-spacing:.1em;text-transform:uppercase;padding:5px 8px;border-radius:4px;border:1px solid var(--line-2);color:var(--muted);white-space:nowrap}
+.tag.real{color:var(--ok);border-color:color-mix(in srgb,var(--ok) 40%,transparent)}
+.tag.sim{color:var(--gold);border-color:color-mix(in srgb,var(--gold) 40%,transparent)}
+
+/* header */
+header.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:color-mix(in srgb,var(--bg) 90%,transparent);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+.top .wrap{display:flex;align-items:center;gap:18px;min-height:60px}
+.brand{display:flex;align-items:baseline;gap:10px;text-decoration:none;flex-shrink:0}
+.brand b{font:600 18px/1 var(--f-display);letter-spacing:.12em;white-space:nowrap;color:var(--gold)}
+.brand small{font-size:12px;color:var(--muted)}
+nav.main{display:flex;gap:2px;margin-left:auto}
+nav.main a,nav.bottom a{text-decoration:none;color:var(--muted);font-weight:500;font-size:14px;padding:8px 12px;border-radius:8px}
+nav.main a:hover{color:var(--fg);background:var(--surface)}
+nav.main a.on{color:var(--gold-ink);background:var(--gold)}
+.levels{display:flex;gap:2px;border:1px solid var(--line-2);border-radius:999px;padding:3px;flex-shrink:0}
+.levels button{border:0;background:none;padding:5px 11px;border-radius:999px;font-size:12.5px;font-weight:600;color:var(--muted);cursor:pointer}
+.levels button.on{background:var(--raise);color:var(--gold-2);box-shadow:inset 0 0 0 1px var(--line-2)}
+.levels .s{display:none}
+nav.bottom{display:none;position:fixed;left:0;right:0;bottom:0;z-index:30;background:var(--surface);border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom,0px)}
+nav.bottom a{flex:1;text-align:center;padding:12px 4px 13px;font-size:12.5px;border-radius:0;position:relative}
+nav.bottom a.on{color:var(--gold)}
+nav.bottom a.on::before{content:"";position:absolute;top:0;left:30%;right:30%;height:2px;background:var(--gold)}
+@media (max-width:860px){
+  nav.main{display:none}
+  .brand small{display:none}
+  .levels{margin-left:auto}
+  nav.bottom{display:flex}
+  body{padding-bottom:calc(72px + env(safe-area-inset-bottom,0px))}
+}
+@media (max-width:420px){.brand b{font-size:15px;letter-spacing:.08em}.levels .l{display:none}.levels .s{display:inline}.levels button{padding:5px 9px}}
+
+section.view{padding-block:28px 40px}
+section.view[hidden]{display:none}
+
+/* home */
+.hero{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.15fr);gap:36px;align-items:center;padding-block:20px 8px}
+.hero .dev{font-size:15px;color:var(--muted);margin-top:4px;letter-spacing:.04em}
+.hero .name{font:700 clamp(36px,5.6vw,60px)/1.05 var(--f-display);letter-spacing:.06em;text-wrap:balance;color:var(--gold);margin-top:14px}
+.hero h1{font:500 clamp(22px,3vw,30px)/1.25 var(--f-body);margin-top:14px;color:var(--fg)}
+.hero .lead{color:var(--muted);margin-top:14px;max-width:52ch}
+.cta{display:flex;flex-wrap:wrap;gap:10px;margin-top:22px}
+.btn{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--line-2);background:var(--raise);color:var(--fg);padding:10px 16px;border-radius:9px;font-weight:600;font-size:14px;cursor:pointer;text-decoration:none}
+.btn:hover{border-color:var(--gold)}
+.btn.gold{background:var(--gold);color:var(--gold-ink);border-color:var(--gold)}
+.btn.gold:hover{background:var(--gold-2)}
+.btn.sm{padding:7px 12px;font-size:13px}
+.btn:disabled{opacity:.45;cursor:default}
+.hero-fig{border:1px solid var(--line);border-radius:14px;background:radial-gradient(120% 90% at 65% 50%,color-mix(in srgb,var(--gold) 7%,var(--surface)) 0%,var(--surface) 60%);padding:10px;min-width:0}
+canvas{display:block;width:100%}
+@media (max-width:860px){.hero{grid-template-columns:1fr;gap:22px}}
+
+.block{margin-top:52px}
+.block>header{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:8px 16px;margin-bottom:18px}
+.block h2{font:600 clamp(20px,2.6vw,26px)/1.25 var(--f-display);letter-spacing:.04em;margin-top:6px}
+.question{font:500 clamp(18px,2.4vw,22px)/1.45 var(--f-body);max-width:60ch}
+.question em{color:var(--gold-2);font-style:normal}
+.pipe{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.pipe span.st{font:500 12px/1 var(--f-mono);letter-spacing:.06em;padding:9px 11px;border:1px solid var(--line-2);border-radius:7px;color:var(--muted);background:var(--surface);transition:all .35s}
+.pipe span.st.on{color:var(--gold-ink);background:var(--gold);border-color:var(--gold)}
+.pipe i{color:var(--faint);font-style:normal;font-size:12px}
+.mgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px}
+.mcard{display:grid;gap:4px;text-align:left;border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:14px;cursor:pointer}
+.mcard:hover{border-color:var(--line-2);background:var(--raise)}
+.mcard b{display:flex;align-items:center;gap:8px;font-size:15px}
+.mcard b::before{content:"";width:9px;height:9px;border-radius:2px;background:var(--c)}
+.mcard span{font-size:13px;color:var(--muted)}
+.mcard code{font:12px var(--f-mono);color:var(--c)}
+.e2e{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+.e2e div{border-top:2px solid var(--c);background:var(--surface);padding:14px;border-radius:0 0 10px 10px}
+.e2e b{display:block;font:500 11px var(--f-mono);letter-spacing:.1em;text-transform:uppercase;color:var(--c)}
+.e2e p{font-size:14px;margin-top:6px}
+@media (max-width:760px){.e2e{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.mis{display:grid;gap:0;border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.mis div{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.4fr);gap:18px;padding:14px 16px;border-top:1px solid var(--line)}
+.mis div:first-child{border-top:0}
+.mis s{text-decoration:line-through;text-decoration-color:var(--bad);color:var(--muted)}
+.mis p{font-size:14.5px}
+@media (max-width:640px){.mis div{grid-template-columns:1fr;gap:6px}}
+.big{display:grid;justify-items:center;gap:6px;text-align:center}
+.big .row{font:500 13px/1.4 var(--f-mono);letter-spacing:.08em;padding:12px 16px;border:1px solid var(--line-2);border-radius:9px;background:var(--surface);width:min(100%,640px)}
+.big .row.hub{border-color:var(--gold);color:var(--gold-2)}
+.big .row.out{background:var(--gold);color:var(--gold-ink);border-color:var(--gold);font-weight:600}
+.big .ar{color:var(--faint);font-size:14px;line-height:1}
+.note{border:1px dashed var(--line-2);border-radius:10px;padding:14px 16px;font-size:13.5px;color:var(--muted)}
+.note b{color:var(--fg)}
+footer.credit{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);font-size:12.5px;color:var(--faint);display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px}
+
+/* lessons */
+.lessons{display:grid;grid-template-columns:260px minmax(0,1fr);gap:32px;align-items:start}
+.llist{position:sticky;top:calc(76px + env(safe-area-inset-top,0px));display:grid;gap:2px}
+.llist .prog{font-size:12.5px;color:var(--muted);margin-bottom:10px}
+.bar{height:4px;background:var(--line);border-radius:4px;overflow:hidden;margin-top:6px}
+.bar i{display:block;height:100%;background:var(--gold);transition:width .4s}
+.llist button{display:grid;grid-template-columns:26px minmax(0,1fr) 14px;gap:8px;align-items:center;text-align:left;border:0;background:none;padding:8px 10px;border-radius:8px;cursor:pointer;color:var(--muted);font-size:14px;line-height:1.3}
+.llist button .n{font:500 12px var(--f-mono);color:var(--faint)}
+.llist button:hover{background:var(--surface);color:var(--fg)}
+.llist button.on{background:var(--raise);color:var(--fg)}
+.llist button.on .n{color:var(--gold)}
+.llist button .ck{color:var(--ok);font-size:12px}
+.lesson{min-width:0;max-width:72ch}
+.lesson h2{font:600 clamp(24px,3.2vw,32px)/1.2 var(--f-display);letter-spacing:.03em;margin-top:8px}
+.lvl-tabs{display:flex;gap:6px;margin-top:20px;flex-wrap:wrap}
+.lvl-tabs button{border:1px solid var(--line-2);background:none;border-radius:999px;padding:6px 12px;font-size:13px;cursor:pointer;color:var(--muted)}
+.lvl-tabs button.on{border-color:var(--gold);color:var(--gold-2)}
+.lesson .body{font-size:17px;line-height:1.72;margin-top:16px}
+.key{margin-top:18px;font:500 13px/1.5 var(--f-mono);letter-spacing:.04em;color:var(--gold-2);background:var(--surface);border:1px solid var(--line-2);border-radius:9px;padding:12px 14px;overflow-x:auto;white-space:pre}
+.lesson .acts{display:flex;flex-wrap:wrap;gap:10px;margin-top:22px}
+.check{margin-top:34px;border-top:1px solid var(--line);padding-top:22px;display:grid;gap:26px}
+.check h3{font:600 15px var(--f-body)}
+@media (max-width:860px){
+  .lessons{grid-template-columns:1fr;gap:18px}
+  .llist{position:static;display:flex;overflow-x:auto;gap:6px;padding-bottom:6px}
+  .llist .prog{display:none}
+  .llist button{grid-template-columns:auto;padding:8px 12px;border:1px solid var(--line);white-space:nowrap}
+  .llist button .t,.llist button .ck{display:none}
+  .llist button.done .n::after{content:" ✓";color:var(--ok)}
+}
+
+/* quiz primitives */
+.q{font-weight:600;font-size:16px}
+.opts{display:grid;gap:8px;margin-top:12px}
+.opt{text-align:left;border:1px solid var(--line-2);background:var(--surface);padding:11px 14px;border-radius:9px;cursor:pointer;font-size:14.5px;line-height:1.45}
+.opt:hover:not(:disabled){border-color:var(--gold)}
+.opt:disabled{cursor:default}
+.opt.right{border-color:var(--ok);background:color-mix(in srgb,var(--ok) 12%,var(--surface))}
+.opt.wrong{border-color:var(--bad);background:color-mix(in srgb,var(--bad) 12%,var(--surface))}
+.exp{margin-top:12px;font-size:14.5px;color:var(--muted);border-left:2px solid var(--gold);padding-left:12px}
+.exp b{color:var(--fg)}
+
+/* labs */
+.labtabs{display:flex;gap:6px;overflow-x:auto;padding-bottom:6px;margin-bottom:22px}
+.labtabs button{flex-shrink:0;border:1px solid var(--line);background:var(--surface);border-radius:9px;padding:9px 14px;font-size:13.5px;font-weight:600;color:var(--muted);cursor:pointer}
+.labtabs button.on{border-color:var(--gold);color:var(--gold-2);background:var(--raise)}
+.lab[hidden]{display:none}
+.labhead{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-start;gap:10px 20px;margin-bottom:18px}
+.labhead h2{font:600 clamp(20px,2.6vw,26px)/1.2 var(--f-display);letter-spacing:.03em;margin-top:4px}
+.labhead p{color:var(--muted);margin-top:6px;max-width:62ch;font-size:15px}
+.bench{border:1px solid var(--line);background:var(--surface);border-radius:14px;padding:16px;min-width:0}
+.split{display:grid;grid-template-columns:minmax(0,.9fr) minmax(0,1.3fr);gap:18px;align-items:start}
+@media (max-width:860px){.split{grid-template-columns:1fr}}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{border:1px solid var(--line-2);background:var(--bg);border-radius:999px;padding:6px 12px;font-size:13px;font-weight:600;cursor:pointer;color:var(--muted);display:inline-flex;align-items:center;gap:7px}
+.chip::before{content:"";width:8px;height:8px;border-radius:2px;background:var(--c,var(--gold))}
+.chip.on{color:var(--fg);border-color:var(--c,var(--gold));background:color-mix(in srgb,var(--c,var(--gold)) 12%,var(--bg))}
+.kv{display:grid;grid-template-columns:auto minmax(0,1fr);gap:6px 14px;font-size:14px;margin-top:14px}
+.kv dt{color:var(--faint);font:500 11px/1.9 var(--f-mono);letter-spacing:.1em;text-transform:uppercase}
+.kv dd{margin:0}
+.steps{list-style:none;padding:0;margin:16px 0 0;display:grid;gap:6px;counter-reset:s}
+.steps li{counter-increment:s;display:grid;grid-template-columns:24px minmax(0,1fr);gap:8px;font-size:14px;align-items:baseline}
+.steps li::before{content:counter(s);font:500 11px var(--f-mono);color:var(--gold);border:1px solid var(--line-2);border-radius:50%;width:22px;height:22px;display:grid;place-items:center}
+.lvtext{margin-top:16px;font-size:15px;line-height:1.65;border-left:2px solid var(--c,var(--gold));padding-left:12px}
+.cvwrap{background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:8px;min-width:0}
+.toolbar{display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin-top:14px}
+.toolbar label{font-size:13px;color:var(--muted);display:flex;align-items:center;gap:8px}
+input[type=range]{accent-color:var(--gold);width:140px}
+input[type=text],select,textarea{background:var(--bg);border:1px solid var(--line-2);color:var(--fg);border-radius:8px;padding:9px 12px;font:inherit;font-size:14px;width:100%}
+select{width:auto}
+.tok{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px}
+.tok span{display:grid;gap:3px;border:1px solid var(--line-2);border-radius:6px;padding:5px 7px;background:var(--surface);font:13px var(--f-mono)}
+.tok span small{font-size:10px;color:var(--faint)}
+.tok span i{display:flex;gap:1px}
+.tok span i b{width:6px;height:8px;border-radius:1px;background:var(--gold)}
+.readout{display:flex;flex-wrap:wrap;gap:8px 22px;font:13px var(--f-mono);color:var(--muted);margin-top:12px}
+.readout b{color:var(--fg);font-weight:500;font-variant-numeric:tabular-nums}
+.stages{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px}
+.stages span{font:500 11px var(--f-mono);letter-spacing:.08em;text-transform:uppercase;padding:6px 9px;border-radius:6px;border:1px solid var(--line-2);color:var(--faint);transition:all .15s}
+.stages span.on{color:var(--gold-ink);background:var(--gold);border-color:var(--gold)}
+.nbrs{display:grid;gap:6px;margin-top:10px}
+.nbrs div{display:grid;grid-template-columns:minmax(0,1fr) 90px 44px;gap:10px;align-items:center;font-size:13.5px}
+.nbrs i{height:6px;background:var(--line);border-radius:3px;overflow:hidden}
+.nbrs i b{display:block;height:100%;background:var(--gold)}
+.nbrs span.v{font:12px var(--f-mono);text-align:right;font-variant-numeric:tabular-nums}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:12.5px;color:var(--muted);margin-top:10px}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+
+/* match */
+.match{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.2fr);gap:18px}
+@media (max-width:760px){.match{grid-template-columns:1fr}}
+.anchor{border:1px solid var(--line-2);border-radius:12px;padding:14px;background:var(--bg);display:grid;gap:10px;align-content:start}
+.scene{border-radius:9px;display:grid;place-items:center;font-size:44px;letter-spacing:6px;aspect-ratio:16/9;max-width:100%;background:linear-gradient(180deg,#27445f 0%,#6b7f8e 55%,#58704b 56%,#3f5337 100%)}
+.scene.beach{background:linear-gradient(180deg,#3a6d93 0%,#8ab6c9 50%,#3f7fa0 51%,#d9c08f 70%,#c9ad78 100%)}
+.scene.home{background:linear-gradient(180deg,#4a3a2e 0%,#6a5241 60%,#3a2c22 61%,#2c211a 100%)}
+.scene.road{background:linear-gradient(180deg,#5d8db3 0%,#a9c7da 58%,#5a5a58 59%,#444442 100%)}
+.scene.small{aspect-ratio:auto;font-size:30px;padding:14px 8px}
+.frames{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+.frames div{display:grid;gap:4px;text-align:center;font-size:11px;color:var(--muted);font-family:var(--f-mono)}
+.frames .scene{font-size:26px;letter-spacing:0}
+.mopts{display:grid;gap:8px}
+.mopt{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;align-items:center;text-align:left;border:1px solid var(--line-2);background:var(--bg);padding:11px 14px;border-radius:10px;cursor:pointer;font-size:14.5px}
+.mopt:hover:not([aria-disabled=true]){border-color:var(--gold)}
+.mopt.right{border-color:var(--ok);background:color-mix(in srgb,var(--ok) 10%,var(--bg))}
+.mopt.wrong{border-color:var(--bad);background:color-mix(in srgb,var(--bad) 10%,var(--bg))}
+.mopt .why{grid-column:1/-1;font-size:13px;color:var(--muted)}
+.play{border:1px solid var(--line-2);background:var(--raise);border-radius:999px;padding:5px 11px;font-size:12px;font-weight:600;cursor:pointer;color:var(--gold-2);white-space:nowrap}
+.dots{display:flex;gap:6px}
+.dots i{width:22px;height:4px;border-radius:2px;background:var(--line)}
+.dots i.ok{background:var(--ok)}.dots i.no{background:var(--bad)}.dots i.cur{background:var(--gold)}
+
+/* architecture */
+.arch{display:grid;gap:16px}
+.palette{display:flex;flex-wrap:wrap;gap:8px;min-height:44px}
+.blk{border:1px solid var(--line-2);background:var(--raise);border-radius:8px;padding:8px 11px;font-size:13px;font-weight:600;cursor:grab;user-select:none;touch-action:manipulation}
+.blk.sel{border-color:var(--gold);box-shadow:0 0 0 2px color-mix(in srgb,var(--gold) 35%,transparent)}
+.flow{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr) minmax(0,1fr);gap:12px;align-items:center}
+.col{display:grid;gap:8px}
+.inp{font:500 12px var(--f-mono);letter-spacing:.08em;text-transform:uppercase;color:var(--c);border:1px solid var(--line);border-radius:8px;padding:10px;background:var(--bg);text-align:center}
+.slot{min-height:44px;border:1.5px dashed var(--line-2);border-radius:8px;display:grid;place-items:center;padding:6px;font-size:12.5px;color:var(--faint);cursor:pointer;text-align:center;transition:border-color .2s,background .2s}
+.slot.hot{border-color:var(--gold);background:color-mix(in srgb,var(--gold) 8%,transparent)}
+.slot.filled{border-style:solid;color:var(--fg);font-weight:600;background:var(--raise)}
+.slot.ok{border-color:var(--ok)}.slot.no{border-color:var(--bad)}
+.slot.tall{min-height:120px}
+.flow.done .slot{animation:glow 1.6s ease-in-out infinite}
+@keyframes glow{50%{box-shadow:0 0 0 3px color-mix(in srgb,var(--gold) 30%,transparent)}}
+@media (max-width:640px){.flow{grid-template-columns:1fr}.slot.tall{min-height:56px}}
+pre.diag{font:12.5px/1.6 var(--f-mono);color:var(--gold-2);background:var(--bg);border:1px solid var(--line);border-radius:9px;padding:14px;overflow-x:auto;margin:12px 0 0}
+
+/* ask */
+.ask{display:grid;grid-template-columns:minmax(0,1fr) 280px;gap:24px;align-items:start}
+@media (max-width:860px){.ask{grid-template-columns:1fr}}
+.log{display:grid;gap:14px;min-height:240px}
+.msg{max-width:92%;border-radius:12px;padding:12px 14px;font-size:15px;line-height:1.6}
+.msg.u{justify-self:end;background:var(--gold);color:var(--gold-ink);font-weight:500}
+.msg.a{background:var(--surface);border:1px solid var(--line)}
+.msg .src{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-top:10px;font:12px var(--f-mono);color:var(--faint)}
+.msg .rel{margin-top:10px;display:flex;flex-wrap:wrap;gap:6px}
+.askbar{display:flex;gap:8px;margin-top:16px}
+.askbar input{flex:1;min-width:0}
+.sugg{display:grid;gap:6px}
+.sugg button{text-align:left;border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:9px 12px;font-size:13.5px;cursor:pointer;color:var(--muted)}
+.sugg button:hover{border-color:var(--gold);color:var(--fg)}
+.glos{display:grid;gap:10px;margin-top:4px}
+.glos dt{font-weight:600;font-size:14px;color:var(--gold-2)}
+.glos dd{margin:2px 0 0;font-size:13.5px;color:var(--muted)}
+.qz{max-width:680px}
+.qzhead{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;margin-bottom:18px}
+.score{font:600 44px/1 var(--f-display);color:var(--gold)}
+@media (prefers-reduced-motion: reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+
+
+<header class="top">
+  <div class="wrap">
+    <a class="brand" href="#home" data-go="home"><b>HOW AI SENSES</b><small>A multimodal AI lab</small></a>
+    <nav class="main" aria-label="Sections">
+      <a href="#home" data-go="home">Home</a>
+      <a href="#lessons" data-go="lessons">Lessons</a>
+      <a href="#labs" data-go="labs">Labs</a>
+      <a href="#quiz" data-go="quiz">Quiz</a>
+      <a href="#ask" data-go="ask">Ask</a>
+    </nav>
+    <div class="levels" role="group" aria-label="Depth level">
+      <button data-lv="0"><span class="l">Simple</span><span class="s">L1</span></button>
+      <button data-lv="1"><span class="l">Technical</span><span class="s">L2</span></button>
+      <button data-lv="2"><span class="l">Deep Dive</span><span class="s">L3</span></button>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+
+<!-- HOME -->
+<section class="view" id="v-home">
+  <div class="hero">
+    <div>
+      <div class="eyebrow">An offline learning lab · 10 lessons · 6 instruments</div>
+      <div class="name">How AI Senses</div>
+      <div class="dev">Text · Image · Audio · Video · and more</div>
+      <h1>How one AI system learns from text, images, sound, video and more.</h1>
+      <p class="lead">Explore how AI learns from the many ways information exists in the world, and how text, images, audio, video and other data become connected inside multimodal AI systems.</p>
+      <div class="cta">
+        <a class="btn gold" href="#lessons" data-go="lessons">Start Lesson 1</a>
+        <a class="btn" href="#labs" data-go="labs">Open the labs</a>
+      </div>
+    </div>
+    <div class="hero-fig"><canvas id="hero-cv" aria-label="Nine modalities flowing through encoders into a shared representation space, then out to understand, reason and generate"></canvas></div>
+  </div>
+
+  <div class="block">
+    <header><div><div class="eyebrow">The core question</div></div></header>
+    <p class="question">Humans read text, look at images, listen to sound and watch video. <em>How can one AI system learn relationships across such different forms of information?</em></p>
+    <p class="muted" style="margin-top:12px;max-width:64ch">Each data type starts in its own form. The system turns each one into machine-readable representations, then aligns or integrates them so it can learn that a sentence, a photo and a sound can all describe the same thing.</p>
+  </div>
+
+  <div class="block">
+    <header><div><div class="eyebrow">The multimodal pipeline</div><h2>From raw data to a better model</h2></div><span class="tag">Training loop</span></header>
+    <div class="pipe" id="pipe"></div>
+  </div>
+
+  <div class="block">
+    <header><div><div class="eyebrow">Nine modalities</div><h2>What the AI actually receives</h2></div><a class="btn sm" href="#labs" data-go="labs" data-lab="explore">Open Modality Explorer</a></header>
+    <div class="mgrid" id="mgrid"></div>
+  </div>
+
+  <div class="block">
+    <header><div><div class="eyebrow">One example, end to end</div><h2>A 10-second clip: a child rides a bicycle while a bell rings</h2></div><a class="btn sm" href="#labs" data-go="labs" data-lab="video">Scrub the timeline</a></header>
+    <div class="e2e">
+      <div style="--c:var(--m-image)"><b>Visual</b><p>Frames show a child, a bicycle and a road.</p></div>
+      <div style="--c:var(--m-video)"><b>Temporal</b><p>Change across frames shows riding, slowing, stopping.</p></div>
+      <div style="--c:var(--m-audio)"><b>Audio</b><p>A short bright ring lines up with the hand on the bell.</p></div>
+      <div style="--c:var(--m-text)"><b>Language</b><p>A caption or transcript names what happens.</p></div>
+    </div>
+    <p class="muted" style="margin-top:12px;font-size:14.5px;max-width:70ch">Training can teach the model how these four signals relate to a target such as a caption, an answer, a label or an action.</p>
+  </div>
+
+  <div class="block">
+    <header><div><div class="eyebrow">Misconceptions</div><h2>Where intuition goes wrong</h2></div></header>
+    <div class="mis" id="mis"></div>
+  </div>
+
+  <div class="block">
+    <header><div><div class="eyebrow">The whole picture</div><h2>From the real world to understanding</h2></div></header>
+    <div class="big">
+      <div class="row">REAL WORLD</div><div class="ar">↓</div>
+      <div class="row">TEXT · IMAGE · AUDIO · VIDEO · CODE · DOCUMENTS · TABLES · SENSORS · 3D</div><div class="ar">↓</div>
+      <div class="row">MODALITY-SPECIFIC PROCESSING / ENCODERS</div><div class="ar">↓</div>
+      <div class="row">REPRESENTATIONS / EMBEDDINGS</div><div class="ar">↓</div>
+      <div class="row hub">MULTIMODAL ALIGNMENT / INTEGRATION</div><div class="ar">↓</div>
+      <div class="row">LANGUAGE / REASONING / GENERATION</div><div class="ar">↓</div>
+      <div class="row out">UNDERSTAND · REASON · GENERATE</div>
+    </div>
+  </div>
+
+  <div class="block note"><b>Accuracy and trust.</b> Examples here are simplified conceptual models. Real multimodal systems differ in architecture, training objectives, data pipelines and deployment. Nothing in this app describes how any specific commercial model works. Each lab is labelled: <span class="tag real">Real math</span> means the numbers are actually computed; <span class="tag sim">Illustrative</span> means a hand-built picture of the idea. Everything runs offline in your browser, with no AI service and no cost.</div>
+</section>
+
+<!-- LESSONS -->
+<section class="view" id="v-lessons" hidden>
+  <div class="lessons">
+    <aside class="llist" id="llist"></aside>
+    <article class="lesson" id="lesson"></article>
+  </div>
+</section>
+
+<!-- LABS -->
+<section class="view" id="v-labs" hidden>
+  <div class="labtabs" id="labtabs" role="tablist"></div>
+
+  <div class="lab" id="lab-explore">
+    <div class="labhead"><div><div class="eyebrow">Lab 1 · Modality Explorer</div><h2>How each input is represented</h2><p>Pick a data type to see what the model receives, the steps that turn it into numbers, and the representation it ends up with.</p></div><span class="tag sim" id="ex-tag">Illustrative</span></div>
+    <div class="chips" id="ex-chips"></div>
+    <div class="split" style="margin-top:16px">
+      <div class="bench" id="ex-info"></div>
+      <div class="cvwrap" id="ex-vis"></div>
+    </div>
+  </div>
+
+  <div class="lab" id="lab-embed" hidden>
+    <div class="labhead"><div><div class="eyebrow">Lab 2 · Embedding Visualizer</div><h2>A shared representation space</h2><p>Twenty inputs: five concepts, each as text, image, audio and video. Drag the slider to train alignment and watch them regroup by meaning instead of by data type. Tap any point to see its nearest neighbours.</p></div><span class="tag sim">Illustrative · 2-D projection</span></div>
+    <div class="split">
+      <div class="cvwrap"><canvas id="em-cv" aria-label="Embedding space scatter plot"></canvas></div>
+      <div class="bench">
+        <div class="toolbar" style="margin-top:0">
+          <label for="em-t">Alignment training <input type="range" id="em-t" min="0" max="100" value="0"></label>
+          <button class="btn sm gold" id="em-run">Train</button>
+          <button class="btn sm" id="em-reset">Reset</button>
+        </div>
+        <p class="lvtext" id="em-say"></p>
+        <div id="em-sel" style="margin-top:16px"></div>
+        <div class="legend" id="em-leg"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="lab" id="lab-video" hidden>
+    <div class="labhead"><div><div class="eyebrow">Lab 3 · Video Timeline</div><h2>Video = space + time + context</h2><p>Scrub through eight frames. Switch to single-image mode to see what one frame cannot tell you.</p></div><span class="tag sim">Illustrative</span></div>
+    <div class="bench">
+      <div class="cvwrap"><canvas id="vd-main" aria-label="Current video frame"></canvas></div>
+      <div class="cvwrap" id="vd-trackwrap" style="margin-top:10px"><canvas id="vd-track" aria-label="Timeline tracks: frames, motion, audio, events"></canvas></div>
+      <div class="toolbar">
+        <button class="btn sm gold" id="vd-play">Play</button>
+        <label for="vd-t">Frame <input type="range" id="vd-t" min="0" max="700" value="0"></label>
+        <label><input type="checkbox" id="vd-single"> Single image only</label>
+        <label><input type="checkbox" id="vd-sound"> Sound</label>
+      </div>
+      <p class="lvtext" id="vd-say"></p>
+    </div>
+  </div>
+
+  <div class="lab" id="lab-match" hidden>
+    <div class="labhead"><div><div class="eyebrow">Lab 4 · Cross-Modal Match</div><h2>Which one goes with this?</h2><p>Six rounds. Each shows an input in one modality; pick its match in another. Distractors are deliberately close, the way hard negatives are in training.</p></div><div class="dots" id="mt-dots"></div></div>
+    <div class="bench" id="mt-body"></div>
+  </div>
+
+  <div class="lab" id="lab-train" hidden>
+    <div class="labhead"><div><div class="eyebrow">Lab 5 · Training Simulator</div><h2>Predict → loss → gradient → update</h2><p>A tiny contrastive model learns a 2×2 projection that maps six image embeddings (squares) onto their matching text embeddings (circles). The loss, gradients and updates are computed for real, on toy data.</p></div><span class="tag real">Real math · toy data</span></div>
+    <div class="split">
+      <div class="cvwrap"><canvas id="tr-cv" aria-label="Embedding space during training"></canvas></div>
+      <div class="bench">
+        <div class="stages" id="tr-stages"></div>
+        <div class="cvwrap" style="margin-top:12px"><canvas id="tr-mx" aria-label="Similarity matrix and loss curve"></canvas></div>
+        <div class="readout" id="tr-read"></div>
+        <div class="toolbar">
+          <button class="btn sm gold" id="tr-play">Train</button>
+          <button class="btn sm" id="tr-step">One step</button>
+          <button class="btn sm" id="tr-reset">Reset</button>
+        </div>
+        <div class="toolbar">
+          <label for="tr-lr">Learning rate <input type="range" id="tr-lr" min="1" max="100" value="30"> <span class="mono" id="tr-lrv"></span></label>
+          <label for="tr-tau">Temperature <input type="range" id="tr-tau" min="5" max="100" value="30"> <span class="mono" id="tr-tauv"></span></label>
+        </div>
+      </div>
+    </div>
+    <p class="lvtext" id="tr-say" style="max-width:80ch"></p>
+  </div>
+
+  <div class="lab" id="lab-arch" hidden>
+    <div class="labhead"><div><div class="eyebrow">Lab 6 · Architecture Builder</div><h2>Assemble a multimodal pipeline</h2><p>Drag each block into its slot, or tap a block and then tap a slot. Two blocks belong to training, not to this forward pipeline. Then compare fusion strategies.</p></div><span class="tag sim">Conceptual</span></div>
+    <div class="bench arch">
+      <div class="palette" id="ar-pal" aria-label="Blocks"></div>
+      <div class="flow" id="ar-flow"></div>
+      <div class="toolbar" style="margin-top:0"><button class="btn sm gold" id="ar-check">Check pipeline</button><button class="btn sm" id="ar-reset">Reset</button><span class="muted" id="ar-msg" style="font-size:14px"></span></div>
+    </div>
+    <div class="bench" style="margin-top:16px">
+      <div class="eyebrow">Fusion strategies</div>
+      <div class="chips" id="fu-chips" style="margin-top:12px"></div>
+      <pre class="diag" id="fu-diag"></pre>
+      <p class="lvtext" id="fu-say"></p>
+    </div>
+  </div>
+</section>
+
+<!-- QUIZ -->
+<section class="view" id="v-quiz" hidden>
+  <div class="qz">
+    <div class="qzhead">
+      <div><div class="eyebrow">Quiz mode</div><h2 style="font:600 26px var(--f-display);margin-top:6px">Check your understanding</h2></div>
+      <div class="toolbar" style="margin-top:0"><select id="qz-filter" aria-label="Lesson filter"></select><button class="btn sm gold" id="qz-start">Start</button></div>
+    </div>
+    <div class="bench" id="qz-body"></div>
+  </div>
+</section>
+
+<!-- ASK -->
+<section class="view" id="v-ask" hidden>
+  <div class="ask">
+    <div>
+      <div class="labhead" style="margin-bottom:10px"><div><div class="eyebrow">Ask the lessons</div><h2>Ask a question about multimodal AI</h2><p>Answers come from this app's own lesson text, matched on your device. No AI model, no internet, no cost. If a question is outside the lessons, it says so.</p></div><span class="tag real">Offline search</span></div>
+      <div class="log" id="ask-log"></div>
+      <form class="askbar" id="ask-form"><input type="text" id="ask-in" placeholder="e.g. Why does video need more tokens?" autocomplete="off" aria-label="Your question"><button class="btn gold" type="submit">Ask</button></form>
+    </div>
+    <aside>
+      <div class="eyebrow" style="margin-bottom:10px">Try asking</div>
+      <div class="sugg" id="ask-sugg"></div>
+      <div class="eyebrow" style="margin:24px 0 10px">Glossary</div>
+      <dl class="glos" id="glos"></dl>
+    </aside>
+  </div>
+</section>
+
+<footer class="credit"><span>Designed &amp; Architected by Krishnamurthy Kandregula · Made by Claude</span><span>How AI Senses · Krishnamurthy Kandregula Innovation Lab</span></footer>
+</main>
+
+<nav class="bottom" aria-label="Sections">
+  <a href="#home" data-go="home">Home</a>
+  <a href="#lessons" data-go="lessons">Lessons</a>
+  <a href="#labs" data-go="labs">Labs</a>
+  <a href="#quiz" data-go="quiz">Quiz</a>
+  <a href="#ask" data-go="ask">Ask</a>
+</nav>
+
+<script>
+(function(){
+'use strict';
+var $=function(s,r){return (r||document).querySelector(s)};
+var $$=function(s,r){return Array.prototype.slice.call((r||document).querySelectorAll(s))};
+var reduce=!!(window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches);
+var KEY='indriya.v1';
+function load(){try{return JSON.parse(localStorage.getItem(KEY))||{}}catch(e){return{}}}
+var state=Object.assign({level:0,done:[],lesson:0,best:{}},load());
+function save(){try{localStorage.setItem(KEY,JSON.stringify(state))}catch(e){}}
+function cv(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim()}
+function esc(s){return String(s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
+function rng(seed){return function(){seed|=0;seed=seed+0x6D2B79F5|0;var t=Math.imul(seed^seed>>>15,1|seed);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+function hashVals(str,n){var h=2166136261;for(var i=0;i<str.length;i++){h^=str.charCodeAt(i);h=Math.imul(h,16777619)}var r=rng(h);var a=[];for(var k=0;k<n;k++)a.push(r()*2-1);return a}
+function fit(c,ratio,minH,maxH){var d=window.devicePixelRatio||1;var w=Math.max(260,c.clientWidth||(c.parentNode&&c.parentNode.clientWidth)||600);var h=Math.round(w*ratio);if(minH)h=Math.max(minH,h);if(maxH)h=Math.min(maxH,h);c.width=Math.round(w*d);c.height=Math.round(h*d);c.style.height=h+'px';var x=c.getContext('2d');x.setTransform(d,0,0,d,0,0);return{x:x,w:w,h:h}}
+function txt(x,t,px,py,col,size,align,font,base){x.fillStyle=col;x.font=(size||11)+'px '+(font||cv('--f-mono'));x.textAlign=align||'left';x.textBaseline=base||'middle';x.fillText(t,px,py)}
+function vecStrip(x,px,py,cw,ch,vals,col){for(var i=0;i<vals.length;i++){var v=vals[i];x.globalAlpha=0.18+0.82*Math.abs(v);x.fillStyle=v>=0?col:cv('--neg');x.fillRect(px+i*cw,py,cw-1,ch)}x.globalAlpha=1}
+function rrect(x,px,py,w,h,r){x.beginPath();x.moveTo(px+r,py);x.arcTo(px+w,py,px+w,py+h,r);x.arcTo(px+w,py+h,px,py+h,r);x.arcTo(px,py+h,px,py,r);x.arcTo(px,py,px+w,py,r);x.closePath()}
+function arrow(x,x1,y1,x2,y2,col){x.strokeStyle=col;x.fillStyle=col;x.lineWidth=1.2;x.beginPath();x.moveTo(x1,y1);x.lineTo(x2,y2);x.stroke();var a=Math.atan2(y2-y1,x2-x1);x.beginPath();x.moveTo(x2,y2);x.lineTo(x2-7*Math.cos(a-0.4),y2-7*Math.sin(a-0.4));x.lineTo(x2-7*Math.cos(a+0.4),y2-7*Math.sin(a+0.4));x.fill()}
+function shuffle(a){a=a.slice();for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=a[i];a[i]=a[j];a[j]=t}return a}
+var LV=['Simple','Technical','Deep Dive'];
+
+/* ---------------- CONTENT ---------------- */
+var MODS=[
+ {k:'text',name:'Text',c:'--m-text',recv:'Words / tokens',repr:'Token embeddings',steps:['Raw text','Split into subword tokens','Map each token to an ID','Look up embedding vectors, add position'],l:['Text is split into tokens: whole words or pieces of words. Each token gets an ID number and then a list of numbers that captures its meaning.','A subword tokenizer maps text to IDs, an embedding table turns each ID into a vector, and position information keeps word order.','Vocabulary size, from tens of thousands to a few hundred thousand tokens, trades sequence length against embedding table size. Rare words split into more pieces.']},
+ {k:'image',name:'Image',c:'--m-image',recv:'Pixels / patches',repr:'Visual embeddings',steps:['Grid of RGB pixel values','Cut into fixed-size patches','Flatten each patch, apply a linear projection','Patch embeddings plus position'],l:['An image is a grid of coloured dots. The model cuts it into small squares and turns each square into a list of numbers.','A Vision Transformer splits the image into patches, projects each to a vector and adds a position embedding so the layout is kept.','Patch size sets the token count: halving it quadruples the tokens, and attention cost grows roughly with the square of the token count.']},
+ {k:'video',name:'Video',c:'--m-video',recv:'Frames + time',repr:'Spatiotemporal representations',steps:['Sequence of frames','Sample a few frames per second','Cut space-time patches (tubelets)','Spatiotemporal embeddings'],l:['A video is a stack of images in time order. The model looks at what is in each frame and how it changes.','Frames are sampled, patched in space and time, and encoded with attention across both, so motion is captured along with appearance.','Token count grows with frames × patches, so video models rely on sparse sampling, tubelets and token merging to stay within budget.']},
+ {k:'audio',name:'Audio',c:'--m-audio',recv:'Waveform / spectrogram',repr:'Audio representations',steps:['Waveform samples (e.g. 16,000 per second)','Short-time Fourier transform over windows','Log-mel spectrogram','Audio frame embeddings'],l:['Sound is a fast-changing wave. The model turns it into a picture of which pitches are loud at each moment.','A short-time Fourier transform over overlapping windows gives a spectrogram; the mel scale and a log compress it to match human hearing.','Some models skip hand-made features and learn from raw waveforms, or use neural codecs that output discrete audio tokens.']},
+ {k:'doc',name:'Documents',c:'--m-doc',recv:'Text + layout + images',repr:'Multimodal representations',steps:['Page image','Find text blocks, figures and tables','Text tokens with 2-D box positions','Layout-aware joint embeddings'],l:['A document is words plus where they sit on the page, plus pictures and tables. A heading means something different from a footnote.','Document models combine OCR text tokens with bounding-box coordinates and image patches, or read the page image directly at high resolution.','OCR-free approaches avoid OCR errors but need many visual tokens for small print; layout-aware approaches depend on OCR quality.']},
+ {k:'code',name:'Code',c:'--m-code',recv:'Tokens + program structure',repr:'Code representations',steps:['Source text','Tokenize like text','Structure: syntax tree, data flow','Code embeddings'],l:['Code is text with strict rules. Spacing, brackets and order change what a program does.','Code models usually tokenize source like text. Structure such as the syntax tree is learned implicitly or added as extra signals.','Execution results, tests and type information can supply a training signal that plain text lacks.']},
+ {k:'table',name:'Tables',c:'--m-table',recv:'Rows, columns, values',repr:'Structured representations / tokens',steps:['Cells in rows and columns','Keep row and column identity','Serialize to tokens or embed cells','Structured embeddings'],l:['A table is values arranged in rows and columns. The number 31 means temperature or rainfall depending on its column.','Tables are often serialized to text with headers repeated per row, or encoded with row and column position embeddings.','Serialization breaks row-order invariance and scales poorly with large tables; retrieval or code execution often handles big tables better.']},
+ {k:'sensor',name:'Sensor data',c:'--m-sensor',recv:'Time-series signals',repr:'Temporal representations',steps:['Raw signal streams (x, y, z)','Cut into windows, e.g. 1 second','Normalize and encode each window','Temporal embeddings'],l:['Sensors such as a phone accelerometer produce numbers many times a second. Patterns over time reveal walking, running or a fall.','Streams are cut into overlapping windows, normalized, and encoded with 1-D convolutions or transformers over time.','Sampling rates, sensor drift and device placement vary widely, so models need normalization and robustness to distribution shift.']},
+ {k:'3d',name:'3D / spatial',c:'--m-3d',recv:'Points / voxels / features',repr:'Spatial representations',steps:['Point cloud or mesh','Sample points or voxelize','Local geometric features','Spatial embeddings'],l:['3D data describes shape in space: a cloud of points from a depth sensor or lidar, or a mesh.','Point-based networks process sets of (x, y, z) points directly; voxel methods place points into a 3-D grid, like pixels in space.','Point sets have no natural order, so encoders must give the same result for any ordering; voxel grids trade resolution against memory.']}
+];
+
+var LESSONS=[
+ {t:'What Is Multimodal AI?',lab:'explore',key:'MODALITY = a distinct type of input signal\nMULTIMODAL = several modalities, connected in one system',l:[
+  'Humans learn from reading, seeing, hearing and watching all at once. A multimodal AI system can take in more than one kind of data, such as text, images, audio or video, and connect what it learns across them. Ask it what is happening in a clip, and it can use the pictures, the sound and any words together.',
+  'A modality is a distinct type of input signal with its own structure. Text is a discrete sequence, an image is a 2-D grid of pixel values, audio is a 1-D waveform sampled thousands of times per second, and video adds time to images. A multimodal model has an input pathway for each modality it supports, plus a mechanism that lets one modality influence how another is processed: a shared embedding space, cross-attention, or one unified token sequence.',
+  'Multimodal systems differ on three axes: which modalities they accept as input, which they can generate as output, and where modalities interact (early, middle or late in the network). Understanding-only models, such as image-text retrieval, learn aligned representations. Generative vision-language models condition a language decoder on visual features. Any-to-any designs tokenize several modalities into one sequence. Capability depends on the architecture and the paired training data, not on the language model alone.']},
+ {t:'Why Different Data Types Need Different Representations',lab:'explore',key:'TEXT   → 1-D sequence of discrete symbols\nIMAGE  → 2-D grid of pixels\nAUDIO  → 1-D wave, 16,000 samples / second\nVIDEO  → images + time',l:[
+  'A sentence, a photo and a song are stored completely differently. Words come one after another. A photo is a grid of coloured dots. A sound is a wiggly line of air pressure over time. Before an AI can compare them, each has to be turned into numbers in a way that keeps what matters about it.',
+  'Each modality has its own natural structure, and good encoders respect it. Text is tokenized into subword units. Images are split into patches, or processed with convolutions that respect 2-D neighbourhoods. Audio is often converted to a log-mel spectrogram, a time-frequency picture. Tables keep row and column relationships, sensor streams become windowed time series, and 3-D data arrives as point clouds, meshes or voxels. A modality-specific front end preserves this structure before any sharing happens.',
+  'Choosing a representation trades fidelity against sequence length and compute. A 224×224 image cut into 16×16 patches gives 196 tokens. A 10-second video at 8 frames per second gives thousands unless tubelets or token merging compress it. Raw-waveform audio models avoid hand-made features but need very long receptive fields. Serializing a table as text is simple but loses the fact that row order does not matter. These choices strongly affect what a model can learn and at what cost.']},
+ {t:'Tokens, Features and Embeddings',lab:'embed',key:'INPUT → TOKENS → EMBEDDINGS (vectors of d numbers)\nsimilarity(a, b) = cos θ = a·b / (|a| |b|)',l:[
+  'A token is a small piece of the input: part of a word, a square of an image, a slice of sound. Each token is turned into a list of numbers called an embedding. Things with similar meaning end up with similar lists of numbers, so the AI can measure how close two ideas are.',
+  'Tokenization maps input to discrete units, such as subword IDs, or to continuous features, such as patch vectors or audio frames. An embedding layer or encoder maps each unit to a vector with d dimensions, commonly a few hundred to a few thousand. Similarity is usually measured with cosine similarity or a dot product. Position information is added so order and location are not lost.',
+  'Embeddings are learned, not designed by hand, and their geometry reflects the training objective. A contrastive objective shapes a space where paired items are near and unpaired items are far. Next-token prediction shapes contextual embeddings that are useful for generation. Projection heads map encoder outputs of different widths into a common dimension. Embedding spaces are uneven and can encode dataset biases, so distances are useful signals, not ground truth about meaning.']},
+ {t:'How Images Become Machine-Readable',lab:'explore:image',key:'224 × 224 image, 16 × 16 patches\n→ 14 × 14 = 196 patch tokens (+ position)',l:[
+  'To a computer, an image is a grid of numbers: how much red, green and blue is in each pixel. Modern vision models cut the image into small squares called patches, turn each patch into numbers, and learn which patches relate to each other. This patch is an ear; that one is a wheel.',
+  'A Vision Transformer (ViT) splits an image into fixed-size patches, flattens each one, applies a linear projection to get patch embeddings, adds position embeddings, and processes the sequence with self-attention. Convolutional networks instead slide learned filters across the image, building features step by step from edges to textures to parts to whole objects. Either way, the output is a set of visual feature vectors.',
+  'Key design choices are patch size, resolution handling and the pre-training objective. Smaller patches give more tokens and finer detail, but attention cost grows fast. Documents and charts often need tiling or dynamic resolution. Pre-training can use supervised labels, contrastive image-text pairs or masked image modelling. In vision-language models, visual tokens are often compressed with a resampler or pooling before they reach the language model, trading detail for context length.']},
+ {t:'How Video Adds Time',lab:'video',key:'VIDEO = SPATIAL INFORMATION + TEMPORAL INFORMATION + CONTEXT',l:[
+  'A video is many images shown quickly, one after another, often with sound. One photo can show a child on a bicycle. Only a video can show whether the child is starting, stopping or about to ring the bell.',
+  'Video models sample frames, often a few per second, encode each spatially, and then model change over time. Common approaches are per-frame encoding plus temporal attention, 3-D convolutions, and tubelet embeddings, which are patches spanning both space and a few frames. The model has to learn objects, actions, motion, and longer events that unfold over seconds or minutes.',
+  'The core problem is the token budget: frames × patches grows fast. Techniques include sparse frame sampling, factorized space-time attention, merging tokens across similar frames, and memory mechanisms for long videos. Temporal reasoning, such as ordering, cause and effect, or counting events, remains harder than recognising objects in single frames, and some benchmarks can be answered largely from a few key frames.']},
+ {t:'How Audio Is Represented',lab:'explore:audio',key:'WAVEFORM (16 kHz) → STFT (25 ms windows, 10 ms hop)\n→ MEL SCALE → LOG → SPECTROGRAM → AUDIO EMBEDDINGS',l:[
+  'Sound is air pressure changing very quickly. A microphone records it as a long list of numbers, tens of thousands per second. AI usually turns that into a picture of which pitches are loud at each moment, called a spectrogram, and then learns patterns such as words, a bell or rain.',
+  'Audio sampled at 16 kHz gives 16,000 values per second. A short-time Fourier transform over overlapping windows, for example 25 ms windows every 10 ms, produces a spectrogram. Mapping frequencies to the mel scale and taking logs gives a log-mel spectrogram, which is closer to human pitch perception. Encoders, often CNNs or transformers over spectrogram patches, turn this into frame-level embeddings. Speech models may also use learned discrete audio tokens.',
+  'Speech, speaker identity, music and environmental sound need different features and time scales. Self-supervised models learn from unlabelled audio by predicting masked frames. Neural audio codecs produce discrete tokens that allow language-model-style audio generation. Aligning audio with transcripts, or with the video showing what makes the sound, supports cross-modal tasks such as audio-visual event detection.']},
+ {t:'Connecting Modalities',lab:'match',key:'IMAGE  a child riding a bicycle\nTEXT   "A child is riding a bicycle."\nAUDIO  a bicycle bell\nVIDEO  riding → stopping → ringing the bell',l:[
+  'Once each input is turned into numbers, the AI learns which things go together: a photo of a dog on a beach and the sentence "a dog is running on a beach"; the sound of a bell and a child ringing one. It learns these links from huge numbers of real examples that come in pairs.',
+  'Cross-modal learning uses paired data: image-caption pairs, video with narration, audio with transcripts. Alignment can be learned contrastively, pulling matched pairs together in a shared space and pushing mismatched pairs apart, or generatively, by predicting the caption from the image. Once aligned, a text query can retrieve images, and visual features can condition a language model to describe a scene or answer questions about it.',
+  'Contrastive image-text pre-training learns two encoders with an InfoNCE loss over a batch similarity matrix; large batches provide many negatives. Alignment quality depends on how noisy the pairs are (web alt-text is only loosely aligned), on coverage, and on hard negatives. Several modalities can be bound together by aligning each to a hub modality such as images. Fine-grained grounding, linking words to image regions or moments in time, needs region-level or time-level objectives.']},
+ {t:'Training, Loss and Optimization',lab:'train',key:'1 DATA → 2 PREDICT → 3 LOSS → 4 GRADIENTS → 5 UPDATE → 6 REPEAT',l:[
+  'Training is practice with feedback. The model makes a guess, a score called the loss says how wrong it was, and the model\'s internal numbers are nudged so the next guess is a little better. This repeats millions or billions of times.',
+  'The loop: sample a batch of training data; run a forward pass to produce predictions or representations; compute the loss from a training objective; use backpropagation to compute the gradient of the loss with respect to every parameter; let an optimizer such as Adam update the parameters; repeat. Common multimodal objectives are contrastive loss, next-token prediction of text given images, and masked reconstruction.',
+  'Multimodal training usually runs in stages: pre-train the modality encoders, align them (often with frozen encoders and a trainable projector), then instruction-tune on multimodal conversations, sometimes followed by preference optimization. Practical concerns include balancing modalities in the data mix, learning-rate schedules, the temperature in contrastive loss, and stopping one modality from dominating. Evaluation must use data kept apart from training to measure generalization.']},
+ {t:'Multimodal Architectures',lab:'arch',key:'TEXT  → TEXT ENCODER   ┐\nIMAGE → VISION ENCODER ├→ SHARED / PROJECTED → LANGUAGE /\nAUDIO → AUDIO ENCODER  ┤   REPRESENTATION     REASONING MODEL\nVIDEO → VIDEO ENCODER  ┘',l:[
+  'A common design has a separate reader for each kind of data, such as a text encoder, a vision encoder and an audio encoder, and then connects their outputs into a shared space that a language or reasoning model can use. Not every system works this way, and designs are changing quickly. It is not true that every multimodal system simply puts everything into an LLM.',
+  'Four common patterns: dual encoders with a shared embedding space, which suit search and retrieval; encoder plus projector plus language model, where visual features become token-like inputs to an LLM; cross-attention, where the language model attends to visual features at selected layers; and early-fusion or unified models, which tokenize every modality into one sequence from the start.',
+  'Fusion is a trade-off. Late fusion keeps encoders modular and cheap to swap but limits interaction. Cross-attention gives deep interaction at the cost of extra parameters. Early fusion enables any-to-any generation but needs very large interleaved training data and careful tokenizers. Mixture-of-experts routing by modality, token compression and native-resolution vision encoders are active design areas. Architecture alone does not decide capability; data and objectives matter as much.']},
+ {t:'What Multimodal AI Can and Cannot Do',lab:'ask',key:'CAN     describe · read documents · transcribe · retrieve · answer\nSTRUGGLES counting · spatial relations · long-video order · tiny text',l:[
+  'Multimodal AI can describe photos, read charts and documents, transcribe speech, answer questions about videos, and find images from a description. It can also be confidently wrong, miss small details, miscount, confuse the order of events, and reflect biases in its training data. Check important outputs.',
+  'Strengths include captioning, visual question answering, document understanding, retrieval and speech recognition. Known weaknesses include describing objects that are not there (hallucination), exact counting, spatial relations such as left, right and behind, temporal reasoning over long videos, small text at low resolution, and unusual or adversarial inputs. Performance also varies across the languages, accents and cultures represented in the training data.',
+  'Evaluation uses task benchmarks (visual, document, video and audio question answering) plus hallucination probes, but benchmark contamination and narrow metrics can overstate capability. Real deployments need grounding checks, human review for high-stakes use, care with the privacy of images and voices, and clarity about whether a claim applies to one specific model or to multimodal AI in general.']}
+];
+
+var MISC=[
+ ['AI sees images exactly like humans.','AI processes learned numerical representations of visual information. That is not the same as human perception.'],
+ ['An LLM automatically understands every modality.','Multimodal capability depends on the model architecture, its training, and the interfaces that connect each modality.'],
+ ['More data always means a better model.','Data quality, diversity, alignment, labelling, objectives and evaluation all matter as well.'],
+ ['Training means memorizing everything.','Training aims to learn useful patterns and representations, although models can also memorize some training data.'],
+ ['Multimodal means all data is converted into the same thing.','Modalities can keep modality-specific processing while being aligned or integrated at selected stages.']
+];
+
+var QUIZ=[
+ {l:0,q:'What makes a model multimodal?',o:['It has a very large number of parameters','It can take in and relate more than one type of data','It runs on phones and servers','It answers in many languages'],a:1,e:'Size, deployment and language count do not define it. Multimodal means several data types, such as text, images and audio, connected in one system. A multilingual text-only model is still single-modality.'},
+ {l:0,q:'Which of these is NOT a separate modality?',o:['An audio waveform','A video','English text versus Hindi text','An accelerometer time series'],a:2,e:'Two languages are both text. The tokenizer handles them within the same modality. Audio, video and sensor streams each have a different structure.'},
+ {l:1,q:'Why is audio often converted into a spectrogram?',o:['To shrink it to one number','To show which frequencies are present over time','Because models cannot read raw numbers','To convert speech into text'],a:1,e:'A spectrogram is a time-frequency picture. It makes pitch and timing patterns explicit, which is why it is a common input to audio encoders. Turning speech into text is a separate task.'},
+ {l:1,q:'Serializing a table row as "city: Hyderabad | temp: 31" can lose which property?',o:['The values','That the table means the same in any row order','The column names','Nothing is lost'],a:1,e:'Text is ordered, but table rows usually are not. A serialized table forces an order the model may treat as meaningful. Repeating headers per row keeps column identity.'},
+ {l:2,q:'An embedding is best described as:',o:['A compressed image file','A list of numbers representing an input, placed so similar things are close','A human-written label','A database table'],a:1,e:'Embeddings are learned vectors. Their usefulness comes from geometry: similar inputs end up near each other in the vector space.'},
+ {l:2,q:'Two embeddings have cosine similarity close to 1. What does that tell you?',o:['They point in nearly the same direction, so they are likely similar','The inputs are byte-for-byte identical','They are opposites','They are unrelated'],a:0,e:'Cosine similarity measures the angle between vectors. Near 1 means the same direction, which usually signals related meaning, but it does not guarantee identical inputs. Opposites are near −1; unrelated items are near 0.'},
+ {l:3,q:'A 224×224 image is split into 16×16 patches. How many patch tokens is that?',o:['16','196','224','50,176'],a:1,e:'224 ÷ 16 = 14 patches per side, and 14 × 14 = 196. 50,176 is the number of pixels, which is why patching matters.'},
+ {l:3,q:'Why does a Vision Transformer add position embeddings to its patches?',o:['To make colours brighter','Because attention on its own does not know where each patch came from','To reduce the file size','To label the objects'],a:1,e:'Self-attention treats its input as a set. Without position information, a scrambled image would look the same to the model.'},
+ {l:4,q:'Which question can a single frame NOT answer reliably?',o:['Is there a bicycle?','What colour is the helmet?','Is the child starting or stopping?','Is it daytime?'],a:2,e:'Direction and change of speed need at least two moments in time. Objects, colours and lighting are visible in one frame.'},
+ {l:4,q:'A tubelet is:',o:['A video file format','A patch spanning a small region of space and a few consecutive frames','A kind of microphone','A text token for video titles'],a:1,e:'Tubelets extend image patches into time, so one token carries a small amount of motion information.'},
+ {l:5,q:'Audio sampled at 16 kHz means:',o:['16,000 samples per second','16 frequency bands','16 seconds of sound','16-bit values'],a:0,e:'kHz here is the sampling rate. One second of 16 kHz audio is 16,000 numbers, which is why audio is summarised into spectrogram frames.'},
+ {l:5,q:'Why is the mel scale used for audio features?',o:['It is faster to compute','It spaces frequencies more like human pitch perception','It removes all noise','It is required for MP3 files'],a:1,e:'Humans hear pitch roughly logarithmically. The mel scale gives low frequencies finer resolution than high ones.'},
+ {l:6,q:'In contrastive learning, what happens to a matching image-caption pair?',o:['It is pushed apart','It is pulled together, while mismatched pairs are pushed apart','It is deleted','A person labels it every time'],a:1,e:'The loss rewards high similarity for true pairs and low similarity for the other pairs in the batch. The other pairs act as negatives, so no hand labels are needed beyond the pairing itself.'},
+ {l:6,q:'Why are web alt-text captions called weakly aligned?',o:['They are short','They often do not describe exactly what is in the image','They are in the wrong language','The images are low resolution'],a:1,e:'Alt-text might name a product, a filename or a mood instead of the scene. That noise limits how precise the learned alignment can be.'},
+ {l:7,q:'Which order is correct for one training step?',o:['Update → Loss → Predict','Predict → Loss → Gradients → Update','Loss → Predict → Update','Gradients → Predict → Loss'],a:1,e:'You need a prediction to measure loss, the loss to compute gradients, and gradients to update the parameters. Then it repeats.'},
+ {l:7,q:'What does the gradient tell the optimizer?',o:['The final answer','Which direction to change each parameter to reduce the loss','How much training data exists','The model\'s accuracy'],a:1,e:'The gradient is the slope of the loss with respect to each parameter. Stepping against it lowers the loss, and the learning rate sets the step size.'},
+ {l:8,q:'Which design suits fast image search by text?',o:['Dual encoders with a shared embedding space','A single audio encoder','An early-fusion generator only','No encoder at all'],a:0,e:'Image embeddings can be computed once and stored. A text query is embedded and compared by similarity, which is fast even across millions of images.'},
+ {l:8,q:'What does a projector do in an encoder + LLM design?',o:['Displays images on a screen','Maps vision features into the size and space the language model expects','Trains the tokenizer','Removes audio'],a:1,e:'Encoder outputs and language-model inputs usually differ in dimension and meaning. A small trained projector bridges them.'},
+ {l:9,q:'A model says a photo has 7 birds. It has 9. This is:',o:['Impossible for multimodal AI','A known weakness: exact counting','Proof the model has no vision','Always a tokenizer bug'],a:1,e:'Counting many similar objects is a documented weak spot. The model can still describe the scene well, which is why important outputs need checking.'},
+ {l:9,q:'Which statement is more accurate than "more data always means a better model"?',o:['More data always wins','Quality, diversity, alignment, objectives and evaluation also matter','Data does not matter','Only labels matter'],a:1,e:'Noisy or badly aligned data can hurt. How data is chosen, paired and evaluated matters as much as how much there is.'}
+];
+
+var GLOSS=[
+ ['Modality','A type of data with its own structure, such as text, image, audio, video, tables, sensor streams or 3-D data.'],
+ ['Token','A small unit a model processes: a piece of a word, an image patch, an audio frame or a video tubelet.'],
+ ['Embedding','A vector of numbers that represents an input. Similar inputs get nearby vectors.'],
+ ['Encoder','A network that turns raw input of one modality into feature vectors or embeddings.'],
+ ['Vision Transformer (ViT)','An image encoder that splits the image into patches, embeds each patch and applies self-attention across them.'],
+ ['Attention','A mechanism that lets each token weigh information from other tokens using learned relevance scores.'],
+ ['Spectrogram','A time-frequency picture of audio showing how loud each frequency is at each moment. Log-mel spectrograms are a common model input.'],
+ ['Contrastive learning','Training that pulls matched pairs, such as an image and its caption, together and pushes mismatched pairs apart in a shared embedding space. InfoNCE is a common contrastive loss.'],
+ ['Cross-attention','A layer where one sequence, such as text, attends to another, such as image features, so information flows between modalities.'],
+ ['Projector','A small layer, often linear or a small MLP, that maps encoder outputs into the dimension and space a language model expects.'],
+ ['Early vs late fusion','Early fusion mixes modalities near the input in one sequence. Late fusion keeps separate encoders and combines their outputs near the end.'],
+ ['Tubelet','A video patch spanning a small region of space and a few consecutive frames.'],
+ ['Loss','A number measuring how far the model output is from the training target. Training tries to reduce it.'],
+ ['Gradient and backpropagation','Backpropagation computes the gradient: how the loss would change if each parameter changed slightly. The optimizer moves parameters against the gradient.'],
+ ['Temperature','In contrastive loss, a scale on similarity scores. Lower temperature makes the softmax sharper and penalises near-misses more.'],
+ ['Hallucination','Output that states something not supported by the input, such as describing an object that is not in the image.'],
+ ['Point cloud and voxels','A point cloud is a set of (x, y, z) points. Voxels are 3-D grid cells, the spatial version of pixels.']
+];
+
+/* ---------------- ROUTING ---------------- */
+var VIEWS=['home','lessons','labs','quiz','ask'];
+var LABS=[['explore','Modality Explorer'],['embed','Embedding Visualizer'],['video','Video Timeline'],['match','Cross-Modal Match'],['train','Training Simulator'],['arch','Architecture Builder']];
+var cur={view:'home',lab:'explore'};
+var inited={};
+function go(v,lab,noHash){
+  if(VIEWS.indexOf(v)<0)v='home';
+  cur.view=v;
+  VIEWS.forEach(function(n){$('#v-'+n).hidden=n!==v});
+  $$('[data-go]').forEach(function(a){a.classList.toggle('on',a.dataset.go===v&&a.closest('nav'))});
+  if(v==='labs')openLab(lab||cur.lab);
+  if(v==='lessons')renderLesson();
+  if(v==='quiz'&&!inited.quiz){initQuiz();inited.quiz=1}
+  if(v==='ask'&&!inited.ask){initAsk();inited.ask=1}
+  if(v==='home')startHero();else stopHero();
+  if(!noHash){var h=v==='labs'?'lab-'+(lab||cur.lab):v;try{history.replaceState(null,'','#'+h)}catch(e){}}
+  window.scrollTo(0,0);
+}
+document.addEventListener('click',function(e){var a=e.target.closest('[data-go]');if(!a)return;e.preventDefault();go(a.dataset.go,a.dataset.lab)});
+
+/* levels */
+function setLevel(n){state.level=n;save();$$('.levels button').forEach(function(b){b.classList.toggle('on',+b.dataset.lv===n)});
+  if(cur.view==='lessons')renderLesson();if(inited.explore)renderExplorer();}
+$$('.levels button').forEach(function(b){b.onclick=function(){setLevel(+b.dataset.lv)}});
+
+/* ---------------- HOME ---------------- */
+function initHome(){
+  var st=['RAW DATA','PREPROCESSING','TOKENS / FEATURES','EMBEDDINGS','MULTIMODAL ALIGNMENT','MODEL PREDICTION','LOSS','PARAMETER UPDATE','REPEAT ↺'];
+  $('#pipe').innerHTML=st.map(function(s,i){return '<span class="st">'+s+'</span>'+(i<st.length-1?'<i>→</i>':'')}).join('');
+  var sp=$$('#pipe .st'),k=0;
+  if(!reduce)setInterval(function(){if(cur.view!=='home')return;sp.forEach(function(s,i){s.classList.toggle('on',i===k)});k=(k+1)%sp.length},900);else sp[3].classList.add('on');
+  $('#mgrid').innerHTML=MODS.map(function(m,i){return '<button class="mcard" style="--c:var('+m.c+')" data-mod="'+i+'"><b>'+m.name+'</b><span>Receives '+m.recv.toLowerCase()+'</span><code>→ '+m.repr+'</code></button>'}).join('');
+  $$('#mgrid .mcard').forEach(function(b){b.onclick=function(){exMod=+b.dataset.mod;go('labs','explore')}});
+  $('#mis').innerHTML=MISC.map(function(m){return '<div><s>“'+esc(m[0])+'”</s><p>'+esc(m[1])+'</p></div>'}).join('');
+}
+var heroRaf=0,heroParts=[],heroF=null,heroLast=0;
+function heroFit(){var c=$('#hero-cv');heroF=fit(c,c.clientWidth<520?0.95:0.66,280,480)}
+function startHero(){if(heroRaf)return;heroFit();if(reduce){drawHero(0,true);return}heroRaf=requestAnimationFrame(heroLoop)}
+function stopHero(){if(heroRaf)cancelAnimationFrame(heroRaf);heroRaf=0}
+function heroGeom(){var w=heroF.w,h=heroF.h,narrow=w<520;return{w:w,h:h,sx:narrow?66:84,ex:w*(narrow?0.40:0.38),hx:w*(narrow?0.64:0.63),hy:h*0.5,R:Math.min(w,h)*(narrow?0.11:0.12),ox:w-(narrow?70:92),fs:narrow?10:11.5}}
+function drawHero(dt,still){
+  var x=heroF.x,g=heroGeom(),w=g.w,h=g.h;x.clearRect(0,0,w,h);
+  var ys=MODS.map(function(m,i){return h*(0.08+0.84*i/8)});
+  x.strokeStyle=cv('--line');x.lineWidth=1;
+  MODS.forEach(function(m,i){var y=ys[i];x.beginPath();x.moveTo(g.sx,y);x.quadraticCurveTo(g.ex,y,g.hx-g.R,g.hy+(y-g.hy)*0.18);x.stroke();
+    x.fillStyle=cv(m.c);x.beginPath();x.arc(8,y,3.5,0,7);x.fill();txt(x,m.name.replace(' data','').replace(' / spatial',''),18,y,cv('--muted'),g.fs,'left',cv('--f-body'))});
+  var outs=['Understand','Reason','Generate'],oy=[g.hy-h*0.2,g.hy,g.hy+h*0.2];
+  outs.forEach(function(o,i){x.strokeStyle=cv('--line');x.beginPath();x.moveTo(g.hx+g.R,g.hy);x.quadraticCurveTo(g.ox-40,oy[i],g.ox-6,oy[i]);x.stroke();txt(x,o,w-4,oy[i],cv('--gold-2'),g.fs+0.5,'right',cv('--f-body'))});
+  // encoder band
+  x.fillStyle=cv('--raise');rrect(x,g.ex-7,h*0.05,14,h*0.9,7);x.fill();x.strokeStyle=cv('--line-2');x.stroke();
+  txt(x,'ENCODERS',g.ex,h*0.025+2,cv('--faint'),9,'center');
+  // hub
+  var gr=x.createRadialGradient(g.hx,g.hy,2,g.hx,g.hy,g.R*1.8);gr.addColorStop(0,'rgba(216,188,126,.35)');gr.addColorStop(1,'rgba(216,188,126,0)');x.fillStyle=gr;x.beginPath();x.arc(g.hx,g.hy,g.R*1.8,0,7);x.fill();
+  x.strokeStyle=cv('--gold');x.lineWidth=1.5;x.beginPath();x.arc(g.hx,g.hy,g.R,0,7);x.stroke();x.lineWidth=1;
+  txt(x,'shared',g.hx,g.hy-6,cv('--gold-2'),g.fs-1,'center');txt(x,'space',g.hx,g.hy+7,cv('--gold-2'),g.fs-1,'center');
+  if(still)return;
+  // particles
+  if(Math.random()<0.5)heroParts.push({m:Math.floor(Math.random()*9),u:0,o:Math.floor(Math.random()*3),sp:0.004+Math.random()*0.004});
+  heroParts=heroParts.filter(function(p){return p.u<2});
+  heroParts.forEach(function(p){p.u+=p.sp*dt/16;var px,py,col;
+    if(p.u<1){var y=ys[p.m],u=p.u,x0=g.sx,y0=y,cx=g.ex,cy=y,x2=g.hx-g.R,y2=g.hy+(y-g.hy)*0.18;px=(1-u)*(1-u)*x0+2*(1-u)*u*cx+u*u*x2;py=(1-u)*(1-u)*y0+2*(1-u)*u*cy+u*u*y2;col=cv(MODS[p.m].c)}
+    else{var u2=p.u-1,x0b=g.hx+g.R,y0b=g.hy,cxb=g.ox-40,cyb=oy[p.o],x2b=g.ox-6,y2b=oy[p.o];px=(1-u2)*(1-u2)*x0b+2*(1-u2)*u2*cxb+u2*u2*x2b;py=(1-u2)*(1-u2)*y0b+2*(1-u2)*u2*cyb+u2*u2*y2b;col=cv('--gold')}
+    x.fillStyle=col;x.globalAlpha=0.9;x.beginPath();x.arc(px,py,2,0,7);x.fill();x.globalAlpha=1});
+}
+function heroLoop(t){var dt=heroLast?Math.min(50,t-heroLast):16;heroLast=t;drawHero(dt);heroRaf=requestAnimationFrame(heroLoop)}
+
+/* ---------------- LESSONS ---------------- */
+var lessonLv=null;
+function renderLesson(){
+  var i=state.lesson||0,L=LESSONS[i],lv=lessonLv===null?state.level:lessonLv;
+  var done=state.done.length;
+  $('#llist').innerHTML='<div class="prog">'+done+' of 10 lessons complete<div class="bar"><i style="width:'+done*10+'%"></i></div></div>'+LESSONS.map(function(x,j){return '<button class="'+(j===i?'on ':'')+(state.done.indexOf(j)>=0?'done':'')+'" data-l="'+j+'"><span class="n">'+String(j+1).padStart(2,'0')+'</span><span class="t">'+esc(x.t)+'</span><span class="ck">'+(state.done.indexOf(j)>=0?'✓':'')+'</span></button>'}).join('');
+  $$('#llist button').forEach(function(b){b.onclick=function(){state.lesson=+b.dataset.l;lessonLv=null;save();renderLesson();window.scrollTo(0,0)}});
+  var labName=L.lab==='ask'?'Ask the lessons':(LABS.filter(function(p){return p[0]===L.lab.split(':')[0]})[0]||[])[1];
+  var isDone=state.done.indexOf(i)>=0;
+  $('#lesson').innerHTML='<div class="eyebrow">Lesson '+(i+1)+' of 10</div><h2>'+esc(L.t)+'</h2>'+
+   '<div class="lvl-tabs">'+LV.map(function(n,k){return '<button data-k="'+k+'" class="'+(k===lv?'on':'')+'">'+n+'</button>'}).join('')+'</div>'+
+   '<p class="body">'+esc(L.l[lv])+'</p><div class="key">'+esc(L.key)+'</div>'+
+   (i===9?'<div class="mis" style="margin-top:20px">'+MISC.map(function(m){return '<div><s>“'+esc(m[0])+'”</s><p>'+esc(m[1])+'</p></div>'}).join('')+'</div>':'')+
+   '<div class="acts"><button class="btn gold" id="ls-try">Try it: '+esc(labName)+'</button></div>'+
+   '<div class="check"><h3>Check your understanding</h3><div id="ls-q0"></div><div id="ls-q1"></div></div>'+
+   '<div class="acts" style="margin-top:28px">'+(i>0?'<button class="btn" id="ls-prev">← Previous</button>':'')+'<button class="btn '+(isDone?'':'gold')+'" id="ls-done">'+(isDone?'Completed ✓':'Mark complete')+'</button>'+(i<9?'<button class="btn" id="ls-next">Next lesson →</button>':'')+'</div>';
+  $$('.lvl-tabs button',$('#lesson')).forEach(function(b){b.onclick=function(){lessonLv=+b.dataset.k;renderLesson()}});
+  var qs=QUIZ.filter(function(q){return q.l===i});
+  qs.forEach(function(q,k){renderQ(q,$('#ls-q'+k))});
+  $('#ls-try').onclick=function(){var p=L.lab.split(':');if(p[0]==='ask'){go('ask');return}if(p[1])exMod=MODS.map(function(m){return m.k}).indexOf(p[1]);go('labs',p[0])};
+  $('#ls-done').onclick=function(){if(state.done.indexOf(i)<0)state.done.push(i);save();renderLesson()};
+  if($('#ls-prev'))$('#ls-prev').onclick=function(){state.lesson=i-1;lessonLv=null;save();renderLesson();window.scrollTo(0,0)};
+  if($('#ls-next'))$('#ls-next').onclick=function(){if(state.done.indexOf(i)<0)state.done.push(i);state.lesson=i+1;lessonLv=null;save();renderLesson();window.scrollTo(0,0)};
+}
+function renderQ(q,host,onDone){
+  delete host.dataset.done;
+  host.innerHTML='<p class="q">'+esc(q.q)+'</p><div class="opts">'+q.o.map(function(o,i){return '<button class="opt" data-i="'+i+'">'+esc(o)+'</button>'}).join('')+'</div><p class="exp" hidden></p>';
+  $$('.opt',host).forEach(function(b){b.onclick=function(){if(host.dataset.done)return;host.dataset.done='1';var i=+b.dataset.i,ok=i===q.a;
+    $$('.opt',host).forEach(function(x,j){x.disabled=true;if(j===q.a)x.classList.add('right');else if(j===i)x.classList.add('wrong')});
+    var e=$('.exp',host);e.hidden=false;e.innerHTML='<b>'+(ok?'Correct.':'Not quite.')+'</b> '+esc(q.e);if(onDone)onDone(ok)}});
+}
+
+/* ---------------- LABS ---------------- */
+function openLab(k){
+  cur.lab=k;
+  $('#labtabs').innerHTML=LABS.map(function(l){return '<button role="tab" data-k="'+l[0]+'" class="'+(l[0]===k?'on':'')+'" aria-selected="'+(l[0]===k)+'">'+l[1]+'</button>'}).join('');
+  $$('#labtabs button').forEach(function(b){b.onclick=function(){go('labs',b.dataset.k)}});
+  LABS.forEach(function(l){$('#lab-'+l[0]).hidden=l[0]!==k});
+  stop3d();stopVideo();stopTrain();
+  var fn={explore:initExplorer,embed:initEmbed,video:initVideo,match:initMatch,train:initTrain,arch:initArch}[k];
+  requestAnimationFrame(fn);
+}
+
+/* ---- Lab 1: Explorer ---- */
+var exMod=0,rot3d=0,raf3d=0;
+function initExplorer(){
+  inited.explore=1;
+  $('#ex-chips').innerHTML=MODS.map(function(m,i){return '<button class="chip" style="--c:var('+m.c+')" data-i="'+i+'">'+m.name+'</button>'}).join('');
+  $$('#ex-chips .chip').forEach(function(b){b.onclick=function(){exMod=+b.dataset.i;renderExplorer()}});
+  renderExplorer();
+}
+function renderExplorer(){
+  var m=MODS[exMod],lv=state.level;stop3d();
+  $$('#ex-chips .chip').forEach(function(b,i){b.classList.toggle('on',i===exMod)});
+  $('#ex-tag').textContent=m.k==='audio'?'Real DFT · synthetic signal':'Illustrative';
+  $('#ex-tag').className='tag '+(m.k==='audio'?'real':'sim');
+  $('#ex-info').innerHTML='<div class="eyebrow" style="color:var('+m.c+')">'+m.name+'</div><dl class="kv"><dt>Receives</dt><dd>'+m.recv+'</dd><dt>Becomes</dt><dd>'+m.repr+'</dd></dl><ol class="steps">'+m.steps.map(function(s){return '<li>'+esc(s)+'</li>'}).join('')+'</ol><p class="lvtext" style="--c:var('+m.c+')"><span class="eyebrow" style="display:block;margin-bottom:4px;color:var(--faint)">'+LV[lv]+'</span>'+esc(m.l[lv])+'</p>';
+  var vis=$('#ex-vis');
+  if(m.k==='text'){
+    vis.innerHTML='<div style="padding:8px"><label class="eyebrow" for="ex-tx" style="color:var(--faint)">Type any sentence</label><input type="text" id="ex-tx" value="A dog is running on a beach" style="margin-top:8px"><div class="tok" id="ex-tok"></div><p class="muted" style="font-size:12.5px;margin-top:12px">Illustrative tokenizer. Real tokenizers learn their vocabulary from data; IDs and vectors here are generated from each token so the same token always gets the same numbers.</p></div>';
+    var inp=$('#ex-tx');inp.oninput=renderTokens;renderTokens();
+  }else{
+    vis.innerHTML='<canvas id="ex-cv" aria-label="'+m.name+' representation diagram"></canvas>';
+    drawExplorer();
+  }
+}
+function tokenize(s){var out=[];(s.match(/[A-Za-z]+|\d+|[^\sA-Za-z\d]/g)||[]).forEach(function(w,i){
+  if(/^[A-Za-z]+$/.test(w)&&w.length>6){var a=w.slice(0,Math.ceil(w.length/2)),b=w.slice(Math.ceil(w.length/2));out.push((i?'▁':'')+a);out.push(b)}else out.push((i&&/^[A-Za-z\d]/.test(w)?'▁':'')+w)});return out}
+function renderTokens(){var t=tokenize($('#ex-tx').value).slice(0,40);
+  $('#ex-tok').innerHTML=t.map(function(k){var h=hashVals(k.toLowerCase(),8),id=Math.floor((h[0]+1)*24999);return '<span>'+esc(k)+'<small>id '+id+'</small><i>'+h.map(function(v){return '<b style="opacity:'+(0.2+0.8*Math.abs(v)).toFixed(2)+';background:'+(v>=0?'var(--gold)':'var(--neg)')+'"></b>'}).join('')+'</i></span>'}).join('')||'<span class="muted">Type something above.</span>';}
+function sceneCanvas(){var o=document.createElement('canvas');o.width=o.height=64;var g=o.getContext('2d');
+  var sky=g.createLinearGradient(0,0,0,64);sky.addColorStop(0,'#2d5577');sky.addColorStop(1,'#d0ad73');g.fillStyle=sky;g.fillRect(0,0,64,64);
+  g.fillStyle='#f3d98b';g.beginPath();g.arc(47,15,7,0,7);g.fill();
+  g.fillStyle='#3f7fa0';g.fillRect(0,38,64,8);g.fillStyle='#d9c08f';g.fillRect(0,46,64,18);
+  g.fillStyle='#8a5a36';g.fillRect(16,44,16,7);g.fillRect(30,39,7,7);g.fillRect(17,51,3,6);g.fillRect(28,51,3,6);g.fillRect(11,43,6,2);g.fillStyle='#2a1c10';g.fillRect(34,41,2,2);return o}
+var audioCache=null;
+function audioData(){if(audioCache)return audioCache;var sr=4000,n=4000,s=new Float32Array(n),r=rng(7);
+  for(var i=0;i<n;i++){var t=i/sr,v=0.03*(r()*2-1);if(t<0.42)v+=0.35*Math.sin(2*Math.PI*180*t)+0.2*Math.sin(2*Math.PI*360*t);if(t>=0.5){var e=Math.exp(-(t-0.5)*6);v+=e*(0.5*Math.sin(2*Math.PI*1250*t)+0.25*Math.sin(2*Math.PI*1875*t))}s[i]=v}
+  var win=128,hop=64,bins=64,frames=[],mx=0;
+  for(var st=0;st+win<=n;st+=hop){var col=new Float32Array(bins);for(var k=0;k<bins;k++){var re=0,im=0;for(var j=0;j<win;j++){var wv=0.5-0.5*Math.cos(2*Math.PI*j/(win-1)),a=2*Math.PI*k*j/win;re+=s[st+j]*wv*Math.cos(a);im-=s[st+j]*wv*Math.sin(a)}col[k]=Math.log(1+Math.sqrt(re*re+im*im));if(col[k]>mx)mx=col[k]}frames.push(col)}
+  audioCache={s:s,frames:frames,mx:mx,sr:sr,win:win};return audioCache}
+function drawExplorer(){
+  var c=$('#ex-cv');if(!c)return;var m=MODS[exMod];var narrow=(c.clientWidth||600)<520;
+  var ratios={image:narrow?1.05:0.6,video:narrow?0.95:0.5,audio:narrow?0.85:0.6,doc:narrow?1.25:0.62,code:narrow?1.15:0.6,table:narrow?1.15:0.6,sensor:narrow?0.9:0.6,'3d':narrow?1.05:0.6};
+  var F=fit(c,ratios[m.k]||0.6),x=F.x,w=F.w,h=F.h,col=cv(m.c),mu=cv('--muted'),fa=cv('--faint'),ln=cv('--line-2');
+  x.clearRect(0,0,w,h);
+  if(m.k==='image'){
+    var sc=sceneCanvas(),S=narrow?Math.min(w*0.62,200):Math.min(h-50,w*0.36),sx=narrow?(w-S)/2:12,sy=24;
+    txt(x,'RAW PIXELS  64×64×3',sx,12,fa,10);
+    x.imageSmoothingEnabled=false;x.drawImage(sc,sx,sy,S,S);
+    x.strokeStyle='rgba(12,11,9,.85)';x.lineWidth=1.5;for(var g=1;g<4;g++){x.beginPath();x.moveTo(sx+g*S/4,sy);x.lineTo(sx+g*S/4,sy+S);x.stroke();x.beginPath();x.moveTo(sx,sy+g*S/4);x.lineTo(sx+S,sy+g*S/4);x.stroke()}
+    var tx0=narrow?12:sx+S+48,ty0=narrow?sy+S+46:sy+8,avail=w-tx0-12,cols=narrow?8:(avail>=8*40?8:4),ts=Math.min(34,avail/cols-6);
+    if(narrow)arrow(x,w/2,sy+S+8,w/2,sy+S+30,col);else arrow(x,sx+S+10,sy+S/2,tx0-10,sy+S/2,col);
+    txt(x,'16 PATCH TOKENS  +  POSITION',tx0,ty0-12,fa,10);
+    for(var p=0;p<16;p++){var r=Math.floor(p/cols),cc=p%cols,px=tx0+cc*(ts+6),py=ty0+r*(ts+26);x.drawImage(sc,(p%4)*16,Math.floor(p/4)*16,16,16,px,py,ts,ts);x.strokeStyle=ln;x.strokeRect(px,py,ts,ts);vecStrip(x,px,py+ts+4,ts/6,8,hashVals('patch'+p,6),col);txt(x,'p'+p,px,py+ts+19,fa,9)}
+  }else if(m.k==='video'){
+    var N=6,per=narrow?3:6,fw=(w-24-(per-1)*10)/per,fh=fw*0.62;
+    txt(x,'FRAMES  t →',12,12,fa,10);
+    for(var f=0;f<N;f++){var r2=Math.floor(f/per),c2=f%per,fx=12+c2*(fw+10),fy=26+r2*(fh+56);
+      var gg=x.createLinearGradient(0,fy,0,fy+fh);gg.addColorStop(0,'#2d5577');gg.addColorStop(1,'#6b7f8e');x.fillStyle=gg;x.fillRect(fx,fy,fw,fh);x.fillStyle='#4d6b42';x.fillRect(fx,fy+fh*0.72,fw,fh*0.28);
+      var bx=fx+fw*(0.12+0.15*f),by=fy+fh*(0.7-0.5*Math.sin(Math.PI*f/5));x.fillStyle='#f3d98b';x.beginPath();x.arc(bx,by,Math.max(3,fw*0.06),0,7);x.fill();
+      for(var q=0;q<f;q++){x.globalAlpha=0.12+0.06*q;x.beginPath();x.arc(fx+fw*(0.12+0.15*q),fy+fh*(0.7-0.5*Math.sin(Math.PI*q/5)),Math.max(2,fw*0.03),0,7);x.fill()}x.globalAlpha=1;
+      x.strokeStyle=ln;x.strokeRect(fx,fy,fw,fh);txt(x,'t'+f,fx+4,fy+10,'#eee8da',9);
+      if(f%2===0){var ex2=c2+1<per?fx+2*fw+10:fx+fw;x.strokeStyle=col;x.lineWidth=1.5;x.beginPath();x.moveTo(fx,fy+fh+8);x.lineTo(fx,fy+fh+14);x.lineTo(ex2,fy+fh+14);x.lineTo(ex2,fy+fh+8);x.stroke();x.lineWidth=1;txt(x,'tubelet '+(f/2+1),fx,fy+fh+26,col,10);vecStrip(x,fx,fy+fh+36,Math.min(10,fw/5),8,hashVals('tube'+f,8),col)}}
+    txt(x,'Each tubelet = a patch region across 2 frames → one token carrying appearance + motion',12,h-10,mu,narrow?9:10.5);
+  }else if(m.k==='audio'){
+    var A=audioData(),wh=h*0.3,wy=18+wh/2;txt(x,'WAVEFORM  1.0 s · 4,000 samples',12,10,fa,10);
+    x.strokeStyle=col;x.lineWidth=1;x.beginPath();for(var i=0;i<A.s.length;i+=2){var xx=12+(w-24)*i/A.s.length,yy=wy-A.s[i]*wh*0.9;if(i===0)x.moveTo(xx,yy);else x.lineTo(xx,yy)}x.stroke();
+    var sy2=wy+wh/2+34,sh=h-sy2-22,fr=A.frames,cw=(w-60)/fr.length,bh=sh/64;
+    txt(x,'SPECTROGRAM  (windowed DFT, 128-sample Hann windows)',12,sy2-12,fa,10);
+    for(var a=0;a<fr.length;a++)for(var k=0;k<64;k++){var v=fr[a][k]/A.mx;x.globalAlpha=Math.pow(v,1.6);x.fillStyle=col;x.fillRect(48+a*cw,sy2+sh-(k+1)*bh,cw+0.5,bh+0.5)}x.globalAlpha=1;
+    x.strokeStyle=ln;x.strokeRect(48,sy2,w-60,sh);
+    [[0,'0 Hz'],[1000,'1 kHz'],[2000,'2 kHz']].forEach(function(t){var yy=sy2+sh-(t[0]/2000)*sh;txt(x,t[1],44,yy,fa,9,'right')});
+    txt(x,'hum 180 Hz',52+0.2*(w-60),sy2+sh-(180/2000)*sh-8,'#eee8da',10);txt(x,'bell 1250 Hz',52+0.55*(w-60),sy2+sh-(1250/2000)*sh-8,'#eee8da',10);
+    txt(x,'time →',w-12,h-8,fa,10,'right');
+  }else if(m.k==='doc'){
+    var pw=narrow?w-24:w*0.42,ph=narrow?h*0.46:h-30,px2=12,py2=14;
+    x.fillStyle='#e9e4d8';rrect(x,px2,py2,pw,ph,4);x.fill();
+    var regions=[['text',0.08,0.06,0.7,0.07,'Title'],['text',0.08,0.18,0.84,0.22,'Paragraph'],['figure',0.08,0.46,0.42,0.3,'Figure'],['table',0.55,0.46,0.37,0.3,'Table'],['text',0.08,0.82,0.6,0.08,'Footnote']];
+    regions.forEach(function(r){var rx=px2+r[1]*pw,ry=py2+r[2]*ph,rw=r[3]*pw,rh=r[4]*ph;x.fillStyle='#3a342a';
+      if(r[0]==='text'){var lines=Math.max(1,Math.floor(rh/9));for(var l=0;l<lines;l++){x.fillRect(rx,ry+l*9+2,rw*(l===lines-1?0.7:1),r[5]==='Title'?6:3.5)}}
+      else if(r[0]==='figure'){x.fillStyle='#7fa3bd';x.fillRect(rx,ry,rw,rh);x.fillStyle='#3f6a54';x.beginPath();x.moveTo(rx,ry+rh);x.lineTo(rx+rw*0.4,ry+rh*0.4);x.lineTo(rx+rw*0.7,ry+rh*0.7);x.lineTo(rx+rw,ry+rh*0.3);x.lineTo(rx+rw,ry+rh);x.fill()}
+      else{x.strokeStyle='#3a342a';for(var tr=0;tr<=4;tr++){x.beginPath();x.moveTo(rx,ry+tr*rh/4);x.lineTo(rx+rw,ry+tr*rh/4);x.stroke()}for(var tc=0;tc<=3;tc++){x.beginPath();x.moveTo(rx+tc*rw/3,ry);x.lineTo(rx+tc*rw/3,ry+rh);x.stroke()}}
+      x.setLineDash([4,3]);x.strokeStyle=col;x.lineWidth=1.3;x.strokeRect(rx-3,ry-3,rw+6,rh+6);x.setLineDash([]);x.lineWidth=1});
+    var lx=narrow?12:px2+pw+28,ly=narrow?py2+ph+30:py2+10;
+    if(!narrow)arrow(x,px2+pw+6,py2+ph/2,lx-6,py2+ph/2,col);
+    txt(x,'TOKENS WITH 2-D POSITION',lx,ly,fa,10);
+    var toks=[['TXT','"Quarterly report"','(8, 6, 70, 7)'],['TXT','"Revenue grew…" ×42','(8, 18, 84, 22)'],['IMG','9 patch tokens','(8, 46, 42, 30)'],['TAB','"Region | Q1 | Q2"…','(55, 46, 37, 30)'],['TXT','"* Unaudited"','(8, 82, 60, 8)']];
+    toks.forEach(function(t,i){var yy=ly+20+i*(narrow?30:34);x.fillStyle=cv('--raise');rrect(x,lx,yy-11,w-lx-12,24,5);x.fill();txt(x,t[0],lx+8,yy+1,col,10.5);txt(x,t[1],lx+44,yy+1,'#eee8da',narrow?10:11,'left',cv('--f-body'));txt(x,t[2],w-20,yy+1,fa,9.5,'right')});
+    txt(x,'box = (x, y, width, height) as % of page',lx,ly+20+5*(narrow?30:34)+4,mu,10);
+  }else if(m.k==='code'){
+    var code=['def area(r):','    return 3.14 * r * r'];txt(x,'SOURCE',12,12,fa,10);
+    x.fillStyle=cv('--raise');rrect(x,12,22,narrow?w-24:w*0.46,48,6);x.fill();
+    code.forEach(function(l,i){txt(x,l,22,38+i*18,'#eee8da',12.5)});
+    var toks2=['def','▁area','(','r',')',':','↵','⇥','return','▁3.14','▁*','▁r','▁*','▁r'];
+    var ty=88,tx=12;txt(x,'TOKENS',12,ty,fa,10);ty+=14;
+    toks2.forEach(function(t){x.font='11px '+cv('--f-mono');var tw=x.measureText(t).width+12;var lim=narrow?w-12:w*0.46+12;if(tx+tw>lim){tx=12;ty+=26}x.strokeStyle=ln;rrect(x,tx,ty,tw,20,4);x.stroke();txt(x,t,tx+6,ty+10,col,11);tx+=tw+5});
+    var ox=narrow?w/2:w*0.5+w*0.25,oy2=narrow?ty+50:30,sc2=narrow?1:1;
+    txt(x,'STRUCTURE (syntax tree)',narrow?12:w*0.54,oy2-8,fa,10);
+    var nodes=[['FunctionDef area',0,0],['arg r',-1,1],['Return',1,1],['BinOp *',1,2],['BinOp *',0.4,3],['Name r',1.6,3],['3.14',-0.1,4],['Name r',0.9,4]];
+    var dx=narrow?(w-40)/4.2:w*0.1,dy=narrow?34:(h-60)/4.6;
+    var P=nodes.map(function(n){return[ox+n[1]*dx,oy2+18+n[2]*dy]});
+    [[0,1],[0,2],[2,3],[3,4],[3,5],[4,6],[4,7]].forEach(function(e){x.strokeStyle=ln;x.beginPath();x.moveTo(P[e[0]][0],P[e[0]][1]);x.lineTo(P[e[1]][0],P[e[1]][1]);x.stroke()});
+    nodes.forEach(function(n,i){x.font='10.5px '+cv('--f-mono');var tw=x.measureText(n[0]).width+12;x.fillStyle=cv('--raise');rrect(x,P[i][0]-tw/2,P[i][1]-10,tw,20,4);x.fill();x.strokeStyle=i===0?col:ln;x.stroke();txt(x,n[0],P[i][0],P[i][1],i===0?col:'#eee8da',10.5,'center')});
+  }else if(m.k==='table'){
+    var rows=[['City','Temp °C','Rain mm'],['Hyderabad','31','4'],['Chennai','33','12'],['Pune','27','0']];
+    var tw2=narrow?w-24:w*0.44,cw2=[tw2*0.46,tw2*0.27,tw2*0.27],rh2=28;txt(x,'TABLE',12,12,fa,10);
+    rows.forEach(function(r,i){var cx2=12;r.forEach(function(v,j){x.fillStyle=i===0?cv('--raise'):cv('--bg');x.fillRect(cx2,24+i*rh2,cw2[j],rh2);x.strokeStyle=ln;x.strokeRect(cx2,24+i*rh2,cw2[j],rh2);txt(x,v,cx2+8,24+i*rh2+rh2/2,i===0?col:'#eee8da',11.5,'left',i===0?cv('--f-mono'):cv('--f-body'));cx2+=cw2[j]})});
+    var sx3=narrow?12:w*0.5+10,sy3=narrow?24+4*rh2+34:24;
+    if(!narrow)arrow(x,12+tw2+6,24+2*rh2,sx3-6,24+2*rh2,col);
+    txt(x,'SERIALIZED WITH HEADERS PER ROW',sx3,sy3-10,fa,10);
+    rows.slice(1).forEach(function(r,i){var yy=sy3+8+i*(narrow?44:56);x.fillStyle=cv('--raise');rrect(x,sx3,yy,w-sx3-12,narrow?36:46,6);x.fill();txt(x,'[ROW '+(i+1)+']',sx3+8,yy+12,col,10);txt(x,'City: '+r[0]+' | Temp °C: '+r[1]+' | Rain mm: '+r[2],sx3+8,yy+(narrow?26:30),'#eee8da',narrow?9.5:11)});
+    txt(x,'Headers travel with each value, so "31" stays a temperature.',sx3,h-10,mu,narrow?9.5:10.5);
+  }else if(m.k==='sensor'){
+    var gy=24,gh=h*0.55,axes=[['x','--m-sensor'],['y','--m-image'],['z','--m-audio']];txt(x,'ACCELEROMETER  3 axes · 50 Hz · walking',12,12,fa,10);
+    var W=5;for(var wi=0;wi<W;wi++){x.fillStyle=wi%2?'rgba(255,255,255,.03)':'rgba(216,188,126,.06)';var wx=12+wi*(w-24)/W;x.fillRect(wx,gy,(w-24)/W,gh);txt(x,'1 s',wx+4,gy+gh-8,fa,9)}
+    axes.forEach(function(ax,ai){x.strokeStyle=cv(ax[1]);x.lineWidth=1.3;x.beginPath();for(var i=0;i<=250;i++){var t=i/50,v=ai===0?Math.sin(2*Math.PI*1.9*t)*0.8+0.2*Math.sin(2*Math.PI*3.8*t):ai===1?0.4*Math.sin(2*Math.PI*1.9*t+1):0.25*Math.sin(2*Math.PI*0.95*t)+0.15*Math.sin(2*Math.PI*5*t);var xx=12+(w-24)*i/250,yy=gy+gh*(0.2+ai*0.3)-v*gh*0.12;if(i===0)x.moveTo(xx,yy);else x.lineTo(xx,yy)}x.stroke();txt(x,ax[0],w-8,gy+gh*(0.2+ai*0.3),cv(ax[1]),10,'right')});x.lineWidth=1;
+    for(var wj=0;wj<W;wj++){var wx2=12+wj*(w-24)/W+4,cwid=Math.min(10,((w-24)/W-8)/8);arrow(x,wx2+cwid*4,gy+gh+6,wx2+cwid*4,gy+gh+22,col);vecStrip(x,wx2,gy+gh+28,cwid,12,hashVals('win'+wj,8),col);txt(x,'window '+(wj+1),wx2,gy+gh+54,fa,narrow?8:9.5)}
+  }else if(m.k==='3d'){
+    run3d();
+  }
+}
+var pts3d=null;
+function points(){if(pts3d)return pts3d;var r=rng(3),a=[];for(var i=0;i<420;i++){var u=r()*Math.PI*2,v=r()*Math.PI*2,R=0.62,rr=0.24;a.push([(R+rr*Math.cos(v))*Math.cos(u),rr*Math.sin(v),(R+rr*Math.cos(v))*Math.sin(u)])}for(var j=0;j<120;j++){var th=r()*Math.PI*2,ph=Math.acos(2*r()-1);a.push([0.22*Math.sin(ph)*Math.cos(th),0.22*Math.cos(ph)+0.05,0.22*Math.sin(ph)*Math.sin(th)])}pts3d=a;return a}
+function draw3d(){var c=$('#ex-cv');if(!c||MODS[exMod].k!=='3d')return;var narrow=(c.clientWidth||600)<520;var F=fit(c,narrow?1.05:0.6),x=F.x,w=F.w,h=F.h,col=cv('--m-3d'),fa=cv('--faint');x.clearRect(0,0,w,h);
+  var P=points(),cx=narrow?w/2:w*0.3,cy=narrow?h*0.28:h/2,s=narrow?Math.min(w*0.42,h*0.25):Math.min(w*0.26,h*0.42),ca=Math.cos(rot3d),sa=Math.sin(rot3d),tilt=0.45,ct=Math.cos(tilt),st=Math.sin(tilt);
+  txt(x,'POINT CLOUD  '+P.length+' points (x, y, z)',12,12,fa,10);
+  P.map(function(p){var X=p[0]*ca-p[2]*sa,Z=p[0]*sa+p[2]*ca,Y=p[1]*ct-Z*st,Z2=p[1]*st+Z*ct;return[X,Y,Z2]}).sort(function(a,b){return a[2]-b[2]}).forEach(function(q){x.globalAlpha=0.35+0.5*(q[2]+1)/2;x.fillStyle=col;x.beginPath();x.arc(cx+q[0]*s,cy+q[1]*s,1.6,0,7);x.fill()});x.globalAlpha=1;
+  var G=8,occ=[],mx=0;for(var i=0;i<G*G;i++)occ.push(0);P.forEach(function(p){var gx=Math.min(G-1,Math.max(0,Math.floor((p[0]+0.9)/1.8*G))),gz=Math.min(G-1,Math.max(0,Math.floor((p[2]+0.9)/1.8*G)));occ[gz*G+gx]++;mx=Math.max(mx,occ[gz*G+gx])});
+  var vs=narrow?Math.min(w-24,h*0.4):Math.min(w*0.36,h-60),vx=narrow?(w-vs)/2:w*0.58,vy=narrow?h*0.56:(h-vs)/2+6,cs=vs/G;
+  if(!narrow)arrow(x,w*0.47,h/2,vx-8,h/2,col);
+  txt(x,'VOXEL GRID  8×8 (top view, points per cell)',vx,vy-10,fa,10);
+  for(var k=0;k<G*G;k++){var gx2=k%G,gz2=Math.floor(k/G);x.fillStyle=col;x.globalAlpha=occ[k]?0.15+0.85*occ[k]/mx:0.04;x.fillRect(vx+gx2*cs,vy+gz2*cs,cs-2,cs-2)}x.globalAlpha=1;
+}
+function run3d(){stop3d();draw3d();if(reduce)return;var last=0;function loop(t){if(last)rot3d+=Math.min(50,t-last)*0.0006;last=t;draw3d();raf3d=requestAnimationFrame(loop)}raf3d=requestAnimationFrame(loop)}
+function stop3d(){if(raf3d)cancelAnimationFrame(raf3d);raf3d=0}
+
+/* ---- Lab 2: Embeddings ---- */
+var EMC=[{n:'Dog on a beach',c:'--m-text',it:['“A dog runs along the beach”','Photo: dog on wet sand','Sound: waves and barking','Clip: dog sprinting by the sea']},
+ {n:'Child on a bicycle',c:'--m-image',it:['“A child rides a bicycle”','Photo: child on a bike','Sound: bicycle bell','Clip: riding, stopping, ringing']},
+ {n:'Rainstorm',c:'--m-audio',it:['“Heavy rain falls on the street”','Photo: rain on a window','Sound: steady downpour','Clip: umbrellas opening']},
+ {n:'Piano music',c:'--m-sensor',it:['“Soft piano in a quiet room”','Photo: hands on piano keys','Sound: piano chords','Clip: pianist performing']},
+ {n:'City traffic',c:'--m-doc',it:['“Cars honk in busy traffic”','Photo: crowded junction','Sound: horns and engines','Clip: traffic at a signal']}];
+var EMM=['Text','Image','Audio','Video'];
+var emPts=[],emT=0,emSel=null,emRaf=0;
+function initEmbed(){
+  if(!emPts.length){var r=rng(11);var corners=[[-0.58,-0.55],[0.58,-0.55],[-0.58,0.55],[0.58,0.55]];
+    EMC.forEach(function(c,ci){var ang=-Math.PI/2+ci*2*Math.PI/5,cc=[0.62*Math.cos(ang),0.62*Math.sin(ang)];
+      c.it.forEach(function(lab,mi){var a1=r()*6.28,r1=0.08+r()*0.14,a2=mi*Math.PI/2+0.6+r()*0.4,r2=0.07+r()*0.04;
+        emPts.push({c:ci,m:mi,lab:lab,b:[corners[mi][0]+r1*Math.cos(a1),corners[mi][1]+r1*Math.sin(a1)],a:[cc[0]+r2*Math.cos(a2),cc[1]+r2*Math.sin(a2)]})})});}
+  $('#em-leg').innerHTML=EMC.map(function(c){return '<span><i style="width:10px;height:10px;border-radius:50%;background:var('+c.c+')"></i>'+c.n+'</span>'}).join('')+'<span style="flex-basis:100%;height:0"></span>'+EMM.map(function(m,i){return '<span><svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true">'+shapeSVG(i)+'</svg>'+m+'</span>'}).join('');
+  var sl=$('#em-t');sl.value=Math.round(emT*100);sl.oninput=function(){cancelAnimationFrame(emRaf);emT=sl.value/100;drawEmbed()};
+  $('#em-run').onclick=function(){cancelAnimationFrame(emRaf);var from=emT,t0=0;if(reduce){emT=1;sl.value=100;drawEmbed();return}function step(t){if(!t0)t0=t;var u=Math.min(1,(t-t0)/2200);emT=from+(1-from)*(u<.5?2*u*u:1-Math.pow(-2*u+2,2)/2);sl.value=Math.round(emT*100);drawEmbed();if(u<1)emRaf=requestAnimationFrame(step)}emRaf=requestAnimationFrame(step)};
+  $('#em-reset').onclick=function(){cancelAnimationFrame(emRaf);emT=0;sl.value=0;emSel=null;drawEmbed()};
+  var c=$('#em-cv');c.onclick=function(e){var r=c.getBoundingClientRect(),mx=e.clientX-r.left,my=e.clientY-r.top,best=null,bd=1e9;emPts.forEach(function(p,i){var q=emXY(p);var d=Math.hypot(q[0]-mx,q[1]-my);if(d<bd){bd=d;best=i}});emSel=bd<28?best:null;drawEmbed()};
+  if(emSel===null)emSel=4;
+  drawEmbed();
+}
+function shapeSVG(i){var f='fill="var(--muted)"';return i===0?'<circle cx="6" cy="6" r="5" '+f+'/>':i===1?'<rect x="1" y="1" width="10" height="10" '+f+'/>':i===2?'<path d="M6 1L11 11H1Z" '+f+'/>':'<path d="M6 0L12 6L6 12L0 6Z" '+f+'/>'}
+var emG=null;
+function emPos(p){var t=emT;return[p.b[0]+(p.a[0]-p.b[0])*t,p.b[1]+(p.a[1]-p.b[1])*t]}
+function emXY(p){var q=emPos(p),g=emG;return[g.cx+q[0]*g.s,g.cy+q[1]*g.s]}
+function drawEmbed(){
+  var c=$('#em-cv');var F=fit(c,0.9,280,560),x=F.x,w=F.w,h=F.h;emG={cx:w/2,cy:h/2,s:Math.min(w,h)/2-30};
+  x.clearRect(0,0,w,h);x.strokeStyle=cv('--line');x.lineWidth=1;
+  for(var i=-4;i<=4;i++){x.globalAlpha=i===0?0.9:0.4;x.beginPath();x.moveTo(emG.cx+i*emG.s/4,emG.cy-emG.s);x.lineTo(emG.cx+i*emG.s/4,emG.cy+emG.s);x.stroke();x.beginPath();x.moveTo(emG.cx-emG.s,emG.cy+i*emG.s/4);x.lineTo(emG.cx+emG.s,emG.cy+i*emG.s/4);x.stroke()}x.globalAlpha=1;
+  var fa=cv('--faint');
+  if(emT<0.5){x.globalAlpha=1-emT*2;[['TEXT',-0.58,-0.55],['IMAGE',0.58,-0.55],['AUDIO',-0.58,0.55],['VIDEO',0.58,0.55]].forEach(function(l){txt(x,l[0]+' REGION',emG.cx+l[1]*emG.s,emG.cy+l[2]*emG.s+(l[2]<0?-emG.s*0.3:emG.s*0.3),cv('--muted'),10,'center')});x.globalAlpha=1}
+  if(emT>0.5){x.globalAlpha=(emT-0.5)*2;EMC.forEach(function(cc,ci){var ang=-Math.PI/2+ci*2*Math.PI/5;txt(x,cc.n,emG.cx+0.93*Math.cos(ang)*emG.s,emG.cy+0.93*Math.sin(ang)*emG.s,cv(cc.c),11,'center',cv('--f-body'))});x.globalAlpha=1}
+  var sel=emSel!==null?emPts[emSel]:null,nb=[];
+  if(sel){var sv=emPos(sel);nb=emPts.map(function(p,i){var q=emPos(p);return{i:i,s:(sv[0]*q[0]+sv[1]*q[1])/(Math.hypot(sv[0],sv[1])*Math.hypot(q[0],q[1])||1)}}).filter(function(o){return o.i!==emSel}).sort(function(a,b){return b.s-a.s}).slice(0,4);
+    var sq=emXY(sel);nb.forEach(function(o){var q=emXY(emPts[o.i]);x.strokeStyle=cv('--gold');x.globalAlpha=0.5;x.setLineDash([3,3]);x.beginPath();x.moveTo(sq[0],sq[1]);x.lineTo(q[0],q[1]);x.stroke();x.setLineDash([]);x.globalAlpha=1})}
+  emPts.forEach(function(p,i){var q=emXY(p),r=i===emSel?8:6;x.fillStyle=cv(EMC[p.c].c);x.strokeStyle=cv('--bg');x.lineWidth=1.5;x.beginPath();
+    if(p.m===0)x.arc(q[0],q[1],r,0,7);else if(p.m===1)x.rect(q[0]-r*0.85,q[1]-r*0.85,r*1.7,r*1.7);else if(p.m===2){x.moveTo(q[0],q[1]-r);x.lineTo(q[0]+r,q[1]+r*0.8);x.lineTo(q[0]-r,q[1]+r*0.8);x.closePath()}else{x.moveTo(q[0],q[1]-r*1.1);x.lineTo(q[0]+r*1.1,q[1]);x.lineTo(q[0],q[1]+r*1.1);x.lineTo(q[0]-r*1.1,q[1]);x.closePath()}
+    x.fill();x.stroke();if(i===emSel){x.strokeStyle=cv('--fg');x.lineWidth=1.5;x.beginPath();x.arc(q[0],q[1],r+5,0,7);x.stroke()}x.lineWidth=1});
+  $('#em-say').textContent=emT<0.3?'Before alignment, each encoder places its inputs in its own region. A photo of a dog sits closer to a photo of a piano than to the words "a dog runs along the beach".':emT<0.75?'Contrastive training pulls matched pairs together and pushes mismatched pairs apart. Clusters start forming around meaning.':'After alignment, inputs that describe the same concept cluster together whatever their modality. A text query can now find the matching image, sound or clip.';
+  if(sel){$('#em-sel').innerHTML='<div class="eyebrow" style="color:var(--faint)">Selected · '+EMM[sel.m]+'</div><p style="font-weight:600;margin-top:4px">'+esc(sel.lab)+'</p><div class="eyebrow" style="color:var(--faint);margin-top:12px">Nearest by cosine similarity</div><div class="nbrs">'+nb.map(function(o){var p=emPts[o.i];return '<div><span>'+EMM[p.m]+' · '+esc(p.lab)+'</span><i><b style="width:'+Math.max(0,o.s*100).toFixed(0)+'%;background:var('+EMC[p.c].c+')"></b></i><span class="v">'+o.s.toFixed(2)+'</span></div>'}).join('')+'</div><p class="muted" style="font-size:12.5px;margin-top:10px">Real embeddings have hundreds to thousands of dimensions. This 2-D view is a teaching projection.</p>'}
+  else $('#em-sel').innerHTML='<p class="muted">Tap any point to see its nearest neighbours.</p>';
+}
+
+/* ---- Lab 3: Video ---- */
+var vdT=0,vdRaf=0,vdPlaying=false,vdLastFrame=-1;
+var VXS=[0.16,0.3,0.44,0.58,0.67,0.71,0.71,0.71];
+var VEV=['Riding','Riding','Riding','Riding','Slowing','Stopped','Rings bell','Rings bell'];
+function vxAt(t){var i=Math.floor(t),f=t-i;if(i>=7)return VXS[7];return VXS[i]+(VXS[i+1]-VXS[i])*f}
+function drawBike(x,px,py,s,ang,ring,col){
+  x.strokeStyle=col;x.lineWidth=2;var wr=s*0.2;[[px-s*0.32,py],[px+s*0.32,py]].forEach(function(c){x.beginPath();x.arc(c[0],c[1],wr,0,7);x.stroke();for(var k=0;k<3;k++){var a=ang+k*Math.PI/3;x.beginPath();x.moveTo(c[0]-wr*Math.cos(a),c[1]-wr*Math.sin(a));x.lineTo(c[0]+wr*Math.cos(a),c[1]+wr*Math.sin(a));x.globalAlpha=0.5;x.stroke();x.globalAlpha=1}});
+  x.beginPath();x.moveTo(px-s*0.32,py);x.lineTo(px-s*0.05,py-s*0.3);x.lineTo(px+s*0.22,py-s*0.3);x.lineTo(px+s*0.32,py);x.moveTo(px-s*0.05,py-s*0.3);x.lineTo(px+0.02*s,py);x.lineTo(px-s*0.32,py);x.moveTo(px+s*0.22,py-s*0.3);x.lineTo(px+s*0.25,py-s*0.42);x.lineTo(px+s*0.34,py-s*0.44);x.stroke();
+  // rider
+  x.strokeStyle='#f0dcae';x.lineWidth=2.4;var hx=px-s*0.05,hy=py-s*0.72;x.beginPath();x.arc(hx,hy,s*0.08,0,7);x.stroke();
+  x.beginPath();x.moveTo(hx,hy+s*0.08);x.lineTo(px-s*0.08,py-s*0.36);x.lineTo(px+0.02*s,py-s*0.05);x.stroke();
+  x.beginPath();x.moveTo(hx+s*0.01,hy+s*0.16);x.lineTo(px+s*(ring?0.33:0.28),py-s*(ring?0.46:0.44));x.stroke();x.lineWidth=1;
+  if(ring){x.strokeStyle=cv('--m-audio');for(var r=1;r<=3;r++){x.globalAlpha=0.9-r*0.25;x.beginPath();x.arc(px+s*0.36,py-s*0.46,s*0.06*r+4,-1.2,0.6);x.stroke()}x.globalAlpha=1}
+}
+function initVideo(){
+  var sl=$('#vd-t');sl.oninput=function(){vdT=sl.value/100;drawVideo()};
+  $('#vd-single').onchange=drawVideo;
+  $('#vd-play').onclick=function(){if(vdPlaying){stopVideo();return}if(vdT>=6.99)vdT=0;vdPlaying=true;$('#vd-play').textContent='Pause';var last=0;
+    function loop(t){if(last)vdT=Math.min(7,vdT+(t-last)/700);last=t;$('#vd-t').value=Math.round(vdT*100);drawVideo();if(vdT>=7){stopVideo();return}vdRaf=requestAnimationFrame(loop)}vdRaf=requestAnimationFrame(loop)};
+  var tc=$('#vd-track');var drag=false;function seek(e){var r=tc.getBoundingClientRect();var pt=e.touches?e.touches[0]:e;var u=(pt.clientX-r.left-70)/(r.width-82);vdT=Math.max(0,Math.min(7,u*8-0.5));$('#vd-t').value=Math.round(vdT*100);drawVideo()}
+  tc.onpointerdown=function(e){drag=true;seek(e)};window.addEventListener('pointerup',function(){drag=false});tc.onpointermove=function(e){if(drag)seek(e)};
+  drawVideo();
+}
+function stopVideo(){if(vdRaf)cancelAnimationFrame(vdRaf);vdRaf=0;vdPlaying=false;var b=$('#vd-play');if(b)b.textContent='Play'}
+function drawVideo(){
+  var single=$('#vd-single').checked,c=$('#vd-main');var F=fit(c,0.42,200,380),x=F.x,w=F.w,h=F.h;
+  var sk=x.createLinearGradient(0,0,0,h);sk.addColorStop(0,'#2d5577');sk.addColorStop(0.72,'#a9c7da');sk.addColorStop(0.721,'#55534f');sk.addColorStop(1,'#3e3d3a');x.fillStyle=sk;x.fillRect(0,0,w,h);
+  x.strokeStyle='rgba(255,255,255,.35)';x.setLineDash([14,12]);x.beginPath();x.moveTo(0,h*0.86);x.lineTo(w,h*0.86);x.stroke();x.setLineDash([]);
+  var fi=Math.round(vdT),px=w*vxAt(vdT),s=Math.min(h*0.5,w*0.16),py=h*0.72-s*0.2,ring=vdT>=5.6;
+  drawBike(x,px,py,s,-vxAt(vdT)*40,ring,'#eee8da');
+  txt(x,'FRAME '+(single?'?':(fi+1)+' / 8'),10,14,'#eee8da',11);
+  if(!single)txt(x,VEV[Math.min(7,fi)].toUpperCase(),w-10,14,'#f0dcae',11,'right');
+  if(ring&&$('#vd-sound').checked&&vdLastFrame<6&&fi>=6)play('bell');vdLastFrame=fi;
+  $('#vd-trackwrap').hidden=single;
+  if(!single){var tc=$('#vd-track');var G=fit(tc,0.3,190,230),y=G.x,W=G.w,H=G.h,L=70,R=12,cw=(W-L-R)/8,rows=[['FRAMES',0.05,0.3],['MOTION',0.38,0.2],['AUDIO',0.62,0.18],['EVENT',0.84,0.12]],fa=cv('--faint');
+    y.clearRect(0,0,W,H);
+    rows.forEach(function(r){txt(y,r[0],4,H*(r[1]+r[2]/2),fa,9.5)});
+    for(var f=0;f<8;f++){var fx=L+f*cw,fy=H*0.05,fw=cw-4,fh=H*0.3;y.fillStyle='#4a6d8a';y.fillRect(fx,fy,fw,fh);y.fillStyle='#4a4946';y.fillRect(fx,fy+fh*0.7,fw,fh*0.3);y.fillStyle='#eee8da';y.beginPath();y.arc(fx+fw*VXS[f],fy+fh*0.6,Math.max(2,fw*0.07),0,7);y.fill();if(f===fi){y.strokeStyle=cv('--gold');y.lineWidth=2;y.strokeRect(fx-1,fy-1,fw+2,fh+2);y.lineWidth=1}
+      if(f<7){var dxm=VXS[f+1]-VXS[f],bh=Math.min(1,dxm/0.14)*H*0.18;y.fillStyle=cv('--m-video');y.fillRect(fx+cw*0.5,H*0.58-bh,cw*0.5-2,Math.max(1,bh))}}
+    var ay=H*0.71;y.strokeStyle=cv('--m-audio');y.beginPath();for(var i=0;i<=400;i++){var tt=i/400*8,v=0.06*Math.sin(i*1.7);if(tt>6.1)v+=Math.exp(-(tt-6.1)*1.4)*Math.sin(i*2.9)*0.9;var xx=L+(W-L-R)*i/400;if(i===0)y.moveTo(xx,ay-v*H*0.08);else y.lineTo(xx,ay-v*H*0.08)}y.stroke();
+    var segs=[[0,4,'riding','--m-image'],[4,5,'slowing','--m-video'],[5,6,'stopped','--muted'],[6,8,'bell','--m-audio']];segs.forEach(function(sg){y.fillStyle=cv(sg[3]);y.globalAlpha=0.3;y.fillRect(L+sg[0]*cw,H*0.84,(sg[1]-sg[0])*cw-3,H*0.12);y.globalAlpha=1;txt(y,sg[2],L+sg[0]*cw+5,H*0.9,cv('--fg'),9.5)});
+    var ph=L+(vdT+0.5)*cw;y.strokeStyle=cv('--gold');y.lineWidth=1.5;y.beginPath();y.moveTo(ph,2);y.lineTo(ph,H-2);y.stroke();y.lineWidth=1;}
+  $('#vd-say').innerHTML=single?'<b>One frame shows:</b> a child, a bicycle, a road, daylight. <b>It cannot show:</b> which way the bike is moving, whether it is speeding up or slowing down, whether the bell was rung, or what happens next.':'<b>Video adds:</b> motion (the motion bars shrink as the bike slows in frames 4–6), event order (it stops <i>before</i> the bell rings), and sound aligned to action (the audio burst lines up with the hand on the bell in frames 7–8). That is spatial + temporal information + context.';
+}
+
+/* ---- audio synth ---- */
+var AC=null;function ac(){if(!AC){var A=window.AudioContext||window.webkitAudioContext;if(!A)return null;AC=new A()}if(AC.state==='suspended')AC.resume();return AC}
+function noiseBuf(a,sec){var b=a.createBuffer(1,a.sampleRate*sec,a.sampleRate),d=b.getChannelData(0);for(var i=0;i<d.length;i++)d[i]=Math.random()*2-1;return b}
+function play(kind){try{var a=ac();if(!a)return;var t=a.currentTime,out=a.createGain();out.gain.value=0.5;out.connect(a.destination);
+  if(kind==='bell'){[2093,3140,4186].forEach(function(f,i){var o=a.createOscillator(),g=a.createGain();o.frequency.value=f;g.gain.setValueAtTime(0.3/(i+1),t);g.gain.exponentialRampToValueAtTime(0.001,t+1.1);o.connect(g);g.connect(out);o.start(t);o.stop(t+1.2)})}
+  else if(kind==='rain'){var n=a.createBufferSource();n.buffer=noiseBuf(a,2.5);var bp=a.createBiquadFilter();bp.type='bandpass';bp.frequency.value=1400;bp.Q.value=0.6;var g=a.createGain();g.gain.setValueAtTime(0.05,t);g.gain.linearRampToValueAtTime(0.5,t+1.6);g.gain.linearRampToValueAtTime(0.001,t+2.5);n.connect(bp);bp.connect(g);g.connect(out);n.start(t)}
+  else if(kind==='traffic'){var n2=a.createBufferSource();n2.buffer=noiseBuf(a,2.2);var lp=a.createBiquadFilter();lp.type='lowpass';lp.frequency.value=260;var g2=a.createGain();g2.gain.setValueAtTime(0.7,t);g2.gain.linearRampToValueAtTime(0.001,t+2.2);n2.connect(lp);lp.connect(g2);g2.connect(out);n2.start(t);[[0.5,0.35],[1.2,0.25]].forEach(function(hn){[370,466].forEach(function(f){var o=a.createOscillator(),gg=a.createGain();o.type='sawtooth';o.frequency.value=f;gg.gain.setValueAtTime(0,t+hn[0]);gg.gain.linearRampToValueAtTime(0.06,t+hn[0]+0.02);gg.gain.setValueAtTime(0.06,t+hn[0]+hn[1]);gg.gain.linearRampToValueAtTime(0,t+hn[0]+hn[1]+0.03);o.connect(gg);gg.connect(out);o.start(t+hn[0]);o.stop(t+hn[0]+hn[1]+0.05)})})}
+  else if(kind==='piano'){[[261.6,0],[329.6,0],[392,0],[220,0.9],[261.6,0.9],[329.6,0.9]].forEach(function(n){var o=a.createOscillator(),g=a.createGain();o.type='triangle';o.frequency.value=n[0];g.gain.setValueAtTime(0.0001,t+n[1]);g.gain.exponentialRampToValueAtTime(0.18,t+n[1]+0.01);g.gain.exponentialRampToValueAtTime(0.001,t+n[1]+1.6);o.connect(g);g.connect(out);o.start(t+n[1]);o.stop(t+n[1]+1.7)})}
+  else if(kind==='birds'){for(var k=0;k<5;k++){var o=a.createOscillator(),g3=a.createGain(),st=t+k*0.35;o.frequency.setValueAtTime(3200,st);o.frequency.exponentialRampToValueAtTime(4800,st+0.08);o.frequency.exponentialRampToValueAtTime(2800,st+0.16);g3.gain.setValueAtTime(0,st);g3.gain.linearRampToValueAtTime(0.08,st+0.02);g3.gain.linearRampToValueAtTime(0,st+0.18);o.connect(g3);g3.connect(out);o.start(st);o.stop(st+0.2)}}
+}catch(e){}}
+
+/* ---- Lab 4: Match ---- */
+var ROUNDS=[
+ {from:'Image',to:'Text',anchor:'<div class="scene road">🧒🚲</div><p class="muted" style="font-size:13.5px">Photo: a child pedalling along a road, feet on the pedals, leaning forward.</p>',opts:[
+   ['A child is riding a bicycle.',1,'Matches the objects and the action: feet on pedals, leaning into motion.'],
+   ['A child is standing next to a parked bicycle.',0,'Same objects, different action. Hard negatives like this teach the model that the action matters, not just the nouns.'],
+   ['An adult repairs a bicycle tyre.',0,'Shares "bicycle" but the person and the activity are wrong.']]},
+ {from:'Audio',to:'Video',anchor:'<button class="play" data-snd="bell">▶ Play sound</button><p class="muted" style="font-size:13.5px">Sound clip · about 1 s · a bright metallic ring that fades quickly.</p>',opts:[
+   ['Child brakes, then rings the handlebar bell',1,'A short, high, fast-decaying ring fits a small handlebar bell, and it happens right after stopping.'],
+   ['Church bells ring across a town square',0,'Also a bell, but church bells are lower, longer and repeat. The model must learn pitch and duration, not just "bell".'],
+   ['Rain begins falling on a tin roof',0,'Rain is broadband noise that builds up, with no clear pitch.']]},
+ {from:'Text',to:'Image',anchor:'<p style="font-size:17px;font-weight:500">“Waves roll in while a dog sprints along the shoreline.”</p>',opts:[
+   ['<div class="scene beach small">🐕💨</div>',1,'Dog, water, sand and motion all match the sentence.'],
+   ['<div class="scene home small">🐕🛋️</div>',0,'Right animal, wrong place. The caption names the shoreline and waves.'],
+   ['<div class="scene beach small">🐈</div>',0,'Right place, wrong animal. Alignment has to bind the subject and the setting together.']]},
+ {from:'Video',to:'Audio',anchor:'<div class="frames"><div><div class="scene small">🌥️</div>frame 1</div><div><div class="scene small">🌧️</div>frame 2</div><div><div class="scene small">☂️☂️</div>frame 3</div></div><p class="muted" style="font-size:13.5px">Clip: grey sky, rain starts, umbrellas open.</p>',opts:[
+   ['Steady patter building to a heavy downpour <button class="play" data-snd="rain">▶ Play</button>',1,'The sound builds up just as the rain does across the frames. Temporal alignment matters, not only the topic.'],
+   ['Birdsong in a quiet garden <button class="play" data-snd="birds">▶ Play</button>',0,'Outdoor sound, but nothing in the clip suggests birds, and the scene gets louder over time.'],
+   ['Car horns in heavy traffic <button class="play" data-snd="traffic">▶ Play</button>',0,'An outdoor street sound, but no cars appear in the frames.']]},
+ {from:'Sensor',to:'Text',anchor:'<canvas id="mt-sensor" aria-label="Accelerometer trace with regular peaks about twice per second"></canvas><p class="muted" style="font-size:13.5px">Phone accelerometer, 5 seconds. Regular peaks about twice a second.</p>',opts:[
+   ['A person walking at a steady pace',1,'About two steps per second gives regular, evenly spaced peaks.'],
+   ['A person sitting at a desk',0,'Sitting produces an almost flat signal with small drifts.'],
+   ['A phone dropped on the floor',0,'A drop shows a brief free-fall followed by one large spike, not a rhythm.']]},
+ {from:'Text',to:'Audio',anchor:'<p style="font-size:17px;font-weight:500">“Soft piano chords in a quiet room.”</p>',opts:[
+   ['<span>Clip A</span> <button class="play" data-snd="piano">▶ Play</button>',1,'Clear pitched notes forming chords, with a gentle decay. Harmonic structure is what the text describes.'],
+   ['<span>Clip B</span> <button class="play" data-snd="bell">▶ Play</button>',0,'Pitched and quiet, but a single metallic ring, not chords.'],
+   ['<span>Clip C</span> <button class="play" data-snd="traffic">▶ Play</button>',0,'Low rumble and horns. The opposite of a quiet room.']]}
+];
+var mtI=0,mtRes=[],mtOrder=[];
+function initMatch(){if(!mtOrder.length)mtOrder=ROUNDS.map(function(r){return shuffle([0,1,2])});renderMatch()}
+function renderMatch(){
+  $('#mt-dots').innerHTML=ROUNDS.map(function(r,i){return '<i class="'+(mtRes[i]===true?'ok':mtRes[i]===false?'no':i===mtI?'cur':'')+'"></i>'}).join('');
+  if(mtI>=ROUNDS.length){var sc=mtRes.filter(Boolean).length;$('#mt-body').innerHTML='<div class="score">'+sc+' / '+ROUNDS.length+'</div><p style="margin-top:10px;max-width:60ch">You matched across image, text, audio, video and sensor data. Models learn the same skill from millions of paired examples, with close distractors acting as hard negatives that sharpen the alignment.</p><div class="toolbar"><button class="btn gold" id="mt-again">Play again</button><button class="btn" data-go="labs" data-lab="embed">See the embedding space</button></div>';$('#mt-again').onclick=function(){mtI=0;mtRes=[];mtOrder=[];initMatch()};return}
+  var R=ROUNDS[mtI],ord=mtOrder[mtI];
+  $('#mt-body').innerHTML='<div class="eyebrow">Round '+(mtI+1)+' of '+ROUNDS.length+' · '+R.from+' → '+R.to+'</div><div class="match" style="margin-top:14px"><div class="anchor"><div class="tag">'+R.from+'</div>'+R.anchor+'</div><div><div class="tag" style="margin-bottom:10px">Pick the matching '+R.to.toLowerCase()+'</div><div class="mopts">'+ord.map(function(j){return '<div class="mopt" role="button" tabindex="0" data-j="'+j+'"><div>'+R.opts[j][0]+'</div><span class="why" hidden></span></div>'}).join('')+'</div><div class="toolbar"><button class="btn gold" id="mt-next" hidden>'+(mtI<ROUNDS.length-1?'Next round →':'See results')+'</button></div></div></div>';
+  $$('#mt-body .play').forEach(function(b){b.onclick=function(e){e.stopPropagation();play(b.dataset.snd)}});
+  var sc2=$('#mt-sensor');if(sc2){var F=fit(sc2,0.35,90,140),x=F.x,w=F.w,h=F.h;x.strokeStyle=cv('--m-sensor');x.lineWidth=1.4;x.beginPath();for(var i=0;i<=300;i++){var t=i/60,v=Math.sin(2*Math.PI*2*t)*0.7+0.25*Math.sin(2*Math.PI*4*t+0.5)+0.05*Math.sin(i*1.3);var xx=w*i/300,yy=h/2-v*h*0.35;if(i===0)x.moveTo(xx,yy);else x.lineTo(xx,yy)}x.stroke()}
+  function choose(el){if($('#mt-body').dataset.lock==='1')return;$('#mt-body').dataset.lock='1';var j=+el.dataset.j,ok=R.opts[j][1]===1;mtRes[mtI]=ok;
+    $$('#mt-body .mopt').forEach(function(o){var k=+o.dataset.j;o.setAttribute('aria-disabled','true');var why=$('.why',o);why.hidden=false;why.textContent=R.opts[k][2];if(R.opts[k][1])o.classList.add('right');else if(k===j)o.classList.add('wrong')});
+    $('#mt-next').hidden=false;$('#mt-next').onclick=function(){mtI++;renderMatch()};$('#mt-dots').children[mtI].className=ok?'ok':'no'}
+  $('#mt-body').dataset.lock='0';
+  $$('#mt-body .mopt').forEach(function(o){o.onclick=function(){choose(o)};o.onkeydown=function(e){if(e.key==='Enter'||e.key===' '){e.preventDefault();choose(o)}}});
+}
+
+/* ---- Lab 5: Training ---- */
+var TRN=6,TRL=['dog','bike','rain','piano','city','bell'],TRC=['--m-text','--m-image','--m-audio','--m-sensor','--m-doc','--m-video'];
+var tr={};
+function trReset(){var T=[],X=[],r=rng(5);for(var i=0;i<TRN;i++){var a=2*Math.PI*i/TRN;T.push([Math.cos(a),Math.sin(a)])}
+  var th=1.3,c=Math.cos(th),s=Math.sin(th),A=[[1.1*c,-0.8*s+0.35*c],[1.1*s,0.8*c+0.35*s]];
+  T.forEach(function(t){X.push([A[0][0]*t[0]+A[0][1]*t[1]+0.08*(r()*2-1),A[1][0]*t[0]+A[1][1]*t[1]+0.08*(r()*2-1)])});
+  tr={T:T,X:X,W:[[0.9,0.25],[-0.3,0.8]],step:0,hist:[],stage:-1};trForward();tr.hist.push(tr.loss)}
+function trForward(){var W=tr.W,Z=tr.X.map(function(x){return[W[0][0]*x[0]+W[0][1]*x[1],W[1][0]*x[0]+W[1][1]*x[1]]});var tau=+$('#tr-tau').value/100;
+  var P=[],loss=0,acc=0;Z.forEach(function(z,i){var s=tr.T.map(function(t){return(z[0]*t[0]+z[1]*t[1])/tau});var m=Math.max.apply(null,s),e=s.map(function(v){return Math.exp(v-m)}),sum=e.reduce(function(a,b){return a+b},0),p=e.map(function(v){return v/sum});P.push(p);loss-=Math.log(p[i]+1e-12);if(s.indexOf(m)===i)acc++});
+  tr.Z=Z;tr.P=P;tr.loss=loss/TRN;tr.acc=acc;tr.tau=tau}
+function trStep(){var lr=+$('#tr-lr').value/100,tau=tr.tau,dW=[[0,0],[0,0]];
+  for(var i=0;i<TRN;i++)for(var j=0;j<TRN;j++){var g=(tr.P[i][j]-(i===j?1:0))/TRN/tau;for(var a=0;a<2;a++)for(var b=0;b<2;b++)dW[a][b]+=g*tr.T[j][a]*tr.X[i][b]}
+  for(var a2=0;a2<2;a2++)for(var b2=0;b2<2;b2++)tr.W[a2][b2]-=lr*dW[a2][b2];
+  tr.gn=Math.hypot(dW[0][0],dW[0][1],dW[1][0],dW[1][1]);tr.step++;trForward();tr.hist.push(tr.loss);if(tr.hist.length>400)tr.hist.shift()}
+var trRaf=0,trPlaying=false,trTimer=0;
+var TRS=['1 Data','2 Predict','3 Loss','4 Gradients','5 Update','6 Repeat'];
+function initTrain(){
+  if(!tr.T)trReset();
+  $('#tr-stages').innerHTML=TRS.map(function(s){return '<span>'+s+'</span>'}).join('');
+  function lab(){$('#tr-lrv').textContent=(+$('#tr-lr').value/100).toFixed(2);$('#tr-tauv').textContent=(+$('#tr-tau').value/100).toFixed(2)}
+  $('#tr-lr').oninput=lab;$('#tr-tau').oninput=function(){lab();trForward();drawTrain()};lab();
+  $('#tr-step').onclick=function(){stopTrain();animStages(function(){trStep();drawTrain()})};
+  $('#tr-play').onclick=function(){if(trPlaying){stopTrain();return}trPlaying=true;$('#tr-play').textContent='Pause';var k=0;
+    trTimer=setInterval(function(){for(var n=0;n<2;n++)trStep();k=(k+1)%6;setStage(k);drawTrain();if(tr.step>=600)stopTrain()},reduce?200:70)};
+  $('#tr-reset').onclick=function(){stopTrain();trReset();setStage(-1);drawTrain()};
+  drawTrain();
+}
+function setStage(k){$$('#tr-stages span').forEach(function(s,i){s.classList.toggle('on',i===k)})}
+function animStages(done){var k=0;setStage(0);var iv=setInterval(function(){k++;if(k===4)done();if(k>5){clearInterval(iv);setStage(-1);return}setStage(k)},reduce?40:130)}
+function stopTrain(){if(trTimer)clearInterval(trTimer);trTimer=0;trPlaying=false;var b=$('#tr-play');if(b)b.textContent='Train'}
+function drawTrain(){
+  var c=$('#tr-cv');var F=fit(c,0.9,280,520),x=F.x,w=F.w,h=F.h,cx=w/2,cy=h/2,S=Math.min(w,h)/2-34;x.clearRect(0,0,w,h);
+  x.strokeStyle=cv('--line');x.beginPath();x.arc(cx,cy,S,0,7);x.stroke();x.beginPath();x.moveTo(cx-S-10,cy);x.lineTo(cx+S+10,cy);x.moveTo(cx,cy-S-10);x.lineTo(cx,cy+S+10);x.stroke();
+  var zs=tr.Z.map(function(z){var n=Math.hypot(z[0],z[1]);var k=Math.min(1.25,n)/(n||1);return[z[0]*k,z[1]*k]});
+  tr.T.forEach(function(t,i){var tx=cx+t[0]*S,ty=cy+t[1]*S,z=zs[i],zx=cx+z[0]*S,zy=cy+z[1]*S,col=cv(TRC[i]);
+    x.strokeStyle=col;x.globalAlpha=0.45;x.setLineDash([3,3]);x.beginPath();x.moveTo(tx,ty);x.lineTo(zx,zy);x.stroke();x.setLineDash([]);x.globalAlpha=1;
+    x.fillStyle=col;x.beginPath();x.arc(tx,ty,7,0,7);x.fill();txt(x,TRL[i],cx+t[0]*(S+20),cy+t[1]*(S+20),col,11,'center',cv('--f-body'));
+    x.fillStyle=cv('--bg');x.strokeStyle=col;x.lineWidth=2;x.fillRect(zx-6,zy-6,12,12);x.strokeRect(zx-6,zy-6,12,12);x.lineWidth=1;
+    var ok=tr.P[i].indexOf(Math.max.apply(null,tr.P[i]))===i;if(ok){x.fillStyle=col;x.fillRect(zx-3,zy-3,6,6)}});
+  txt(x,'● text embedding (fixed)   ■ projected image embedding',10,h-10,cv('--faint'),10);
+  var m=$('#tr-mx');var G=fit(m,0.52,170,260),y=G.x,W=G.w,H=G.h;y.clearRect(0,0,W,H);
+  var ms=Math.min(H-30,W*0.45),cs=ms/TRN,mx0=26,my0=18;txt(y,'SIMILARITY → SOFTMAX',mx0,8,cv('--faint'),9.5);
+  for(var i=0;i<TRN;i++){y.globalAlpha=1;txt(y,TRL[i],mx0-4,my0+i*cs+cs/2,cv(TRC[i]),9,'right');for(var j=0;j<TRN;j++){y.fillStyle=i===j?cv('--gold'):cv('--m-image');y.globalAlpha=0.08+0.92*tr.P[i][j];y.fillRect(mx0+j*cs,my0+i*cs,cs-2,cs-2)}}y.globalAlpha=1;
+  txt(y,'image ↓ · text →',mx0,my0+ms+10,cv('--faint'),9);
+  var lx=mx0+ms+24,lw=W-lx-8,lh=H-40,ly=my0,hs=tr.hist,mxL=Math.max(Math.log(TRN),hs[0]||1)*1.05;
+  txt(y,'LOSS',lx,8,cv('--faint'),9.5);y.strokeStyle=cv('--line');y.strokeRect(lx,ly,lw,lh);
+  var chance=ly+lh*(1-Math.log(TRN)/mxL);y.setLineDash([3,3]);y.beginPath();y.moveTo(lx,chance);y.lineTo(lx+lw,chance);y.stroke();y.setLineDash([]);txt(y,'chance ln 6',lx+lw-4,chance-7,cv('--faint'),8.5,'right');
+  y.beginPath();y.moveTo(lx,ly+lh);y.strokeStyle=cv('--gold');y.lineWidth=1.6;var n=hs.length;hs.forEach(function(v,k){var xx=lx+lw*(n<2?0:k/(n-1)),yy=ly+lh*(1-v/mxL);if(k===0)y.moveTo(xx,yy);else y.lineTo(xx,yy)});y.stroke();y.lineWidth=1;
+  if(n){var ex=lx+lw,eyv=ly+lh*(1-hs[n-1]/mxL);y.fillStyle=cv('--gold');y.beginPath();y.arc(ex-1,eyv,3,0,7);y.fill()}
+  $('#tr-read').innerHTML='<span>step <b>'+tr.step+'</b></span><span>loss <b>'+tr.loss.toFixed(3)+'</b></span><span>correct matches <b>'+tr.acc+' / 6</b></span>'+(tr.gn!=null?'<span>|gradient| <b>'+tr.gn.toFixed(3)+'</b></span>':'');
+  $('#tr-say').innerHTML=tr.step===0?'<b>Step 0.</b> The projection is random, so image squares land in the wrong places and the similarity matrix has no clear diagonal. Press <b>One step</b> to watch one full pass: predict, measure the InfoNCE loss, compute gradients, update the 2×2 weights.':tr.acc===6&&tr.loss<0.3?'<b>Aligned.</b> Every image embedding is now most similar to its own text embedding, so the matrix is a bright diagonal. Try a higher temperature: the loss stays higher because the softmax is softer. Try a very high learning rate: training can overshoot and wobble.':'<b>Learning.</b> Each update moves the weights against the gradient. Squares rotate and stretch toward their circles, and the diagonal of the matrix brightens as loss falls below the chance level of ln 6 ≈ 1.79.';
+}
+
+/* ---- Lab 6: Architecture ---- */
+var BLK=[['text-enc','Text encoder','--m-text'],['vis-enc','Vision encoder (ViT)','--m-image'],['aud-enc','Audio encoder (log-mel)','--m-audio'],['vid-enc','Video encoder (space + time)','--m-video'],['proj','Projection to shared space','--gold'],['llm','Language / reasoning model','--gold'],['loss','Loss function','--muted'],['opt','Optimizer (Adam)','--muted']];
+var SLOTS=[['text','Text','text-enc','--m-text'],['image','Image','vis-enc','--m-image'],['audio','Audio','aud-enc','--m-audio'],['video','Video','vid-enc','--m-video']];
+var arPlaced={},arSel=null;
+var HINT={'text-enc':'Text needs a tokenizer and text encoder.','vis-enc':'Images need a vision encoder that works on patches.','aud-enc':'Audio needs its own encoder, usually over a spectrogram.','vid-enc':'Video needs an encoder that handles time as well as space.','proj':'Encoder outputs need projecting into one shared space first.','llm':'The final stage reasons over the aligned representations.'};
+function initArch(){renderArch();initFusion()}
+function blkById(id){return BLK.filter(function(b){return b[0]===id})[0]}
+function renderArch(){
+  var used=Object.keys(arPlaced).map(function(k){return arPlaced[k]});
+  $('#ar-pal').innerHTML=BLK.filter(function(b){return used.indexOf(b[0])<0}).map(function(b){return '<div class="blk'+(arSel===b[0]?' sel':'')+'" draggable="true" tabindex="0" role="button" data-b="'+b[0]+'" style="border-left:3px solid var('+b[2]+')">'+b[1]+'</div>'}).join('')||'<span class="muted" style="font-size:13px">All blocks placed. Two stay unused in a correct pipeline.</span>';
+  function slot(id,label){var b=arPlaced[id];return '<div class="slot'+(b?' filled':'')+(id==='proj'||id==='llm'?' tall':'')+'" data-s="'+id+'" tabindex="0" role="button" aria-label="Slot: '+label+'">'+(b?esc(blkById(b)[1]):label)+'</div>'}
+  $('#ar-flow').className='flow';
+  $('#ar-flow').innerHTML='<div class="col">'+SLOTS.map(function(s){return '<div class="inp" style="--c:var('+s[3]+')">'+s[1]+' input</div>'}).join('')+'</div><div class="col">'+SLOTS.map(function(s){return slot(s[0],'Drop '+s[1].toLowerCase()+' encoder')}).join('')+'</div><div class="col">'+slot('proj','Drop: shared representation')+slot('llm','Drop: reasoning stage')+'<div class="inp" style="--c:var(--gold)">Answer · caption · action</div></div>';
+  $$('#ar-pal .blk').forEach(function(el){el.onclick=function(){arSel=arSel===el.dataset.b?null:el.dataset.b;renderArch()};el.onkeydown=function(e){if(e.key==='Enter'||e.key===' '){e.preventDefault();el.click()}};el.ondragstart=function(e){try{e.dataTransfer.setData('text/plain',el.dataset.b)}catch(_){}arSel=el.dataset.b}});
+  $$('#ar-flow .slot').forEach(function(el){var id=el.dataset.s;
+    el.onclick=function(){if(arSel){arPlaced[id]=arSel;arSel=null}else if(arPlaced[id]){delete arPlaced[id]}$('#ar-msg').textContent='';renderArch()};
+    el.onkeydown=function(e){if(e.key==='Enter'||e.key===' '){e.preventDefault();el.click()}};
+    el.ondragover=function(e){e.preventDefault();el.classList.add('hot')};el.ondragleave=function(){el.classList.remove('hot')};
+    el.ondrop=function(e){e.preventDefault();var b='';try{b=e.dataTransfer.getData('text/plain')}catch(_){}b=b||arSel;if(b){arPlaced[id]=b;arSel=null;renderArch()}}});
+  if(arSel)$$('#ar-flow .slot').forEach(function(el){if(!arPlaced[el.dataset.s])el.classList.add('hot')});
+  $('#ar-check').onclick=checkArch;$('#ar-reset').onclick=function(){arPlaced={};arSel=null;$('#ar-msg').textContent='';renderArch()};
+}
+function checkArch(){var want={text:'text-enc',image:'vis-enc',audio:'aud-enc',video:'vid-enc',proj:'proj',llm:'llm'},ok=0,miss=[],bad=[];
+  Object.keys(want).forEach(function(k){var el=$('#ar-flow [data-s="'+k+'"]');var got=arPlaced[k];el.classList.remove('ok','no');if(got===want[k]){ok++;el.classList.add('ok')}else{if(got){el.classList.add('no');bad.push(got)}miss.push(want[k])}});
+  var msg=$('#ar-msg');
+  if(ok===6){$('#ar-flow').classList.add('done');msg.innerHTML='<b style="color:var(--ok)">Pipeline complete.</b> Loss and optimizer stay out: they drive training, not the forward pass.'}
+  else{var first=bad.indexOf('loss')>=0||bad.indexOf('opt')>=0?'Loss and optimizer belong to the training loop, not this forward pipeline.':HINT[miss[0]];msg.textContent=ok+' of 6 correct. '+first}}
+var FUS=[
+ ['Dual encoders','TEXT  → [Text encoder]   → t ┐\n                              ├→ cosine(t, v) → match / search\nIMAGE → [Vision encoder] → v ┘','Two separate encoders map into one shared space. Fast for retrieval, because image embeddings can be computed once and searched. Interaction is shallow: the only contact between modalities is a similarity score.'],
+ ['Encoder + projector + LLM','IMAGE → [Vision encoder] → [Projector] → visual tokens ┐\n                                                      ├→ [LLM] → answer\nTEXT  → [Tokenizer] ────────────────────→ text tokens ┘','Visual features are projected into token-like vectors and placed alongside the text tokens. Reuses a strong language model; image detail is limited by how many visual tokens fit in the context.'],
+ ['Cross-attention','IMAGE → [Vision encoder] → features ─────┐\n                                        ↓ attended at selected layers\nTEXT  → [LLM layer] → [Cross-attn] → [LLM layer] → answer','Text layers attend to visual features at chosen depths. Deep interaction without lengthening the text sequence, at the cost of extra parameters inserted into the model.'],
+ ['Early fusion (unified)','TEXT  ─┐\nIMAGE ─┼→ tokenizers → one interleaved sequence → [Single transformer] → any output\nAUDIO ─┘','Every modality becomes tokens in one sequence from the start. Allows any-to-any generation and the richest interaction, but needs very large interleaved training data and careful tokenizers.']];
+var fuI=1;
+function initFusion(){$('#fu-chips').innerHTML=FUS.map(function(f,i){return '<button class="chip'+(i===fuI?' on':'')+'" data-i="'+i+'">'+f[0]+'</button>'}).join('');$$('#fu-chips .chip').forEach(function(b){b.onclick=function(){fuI=+b.dataset.i;initFusion()}});$('#fu-diag').textContent=FUS[fuI][1];$('#fu-say').textContent=FUS[fuI][2]}
+
+/* ---------------- QUIZ VIEW ---------------- */
+var QZ={list:[],i:0,score:0,f:'all'};
+function initQuiz(){$('#qz-filter').innerHTML='<option value="all">All lessons (20 questions)</option>'+LESSONS.map(function(l,i){return '<option value="'+i+'">Lesson '+(i+1)+' · '+esc(l.t)+'</option>'}).join('');$('#qz-start').onclick=startQuiz;
+  var b=state.best&&state.best.all;$('#qz-body').innerHTML='<p style="max-width:56ch">Short questions with an explanation after every answer, right or wrong. Pick all lessons or one lesson, then start.</p>'+(b!=null?'<p class="muted" style="margin-top:10px">Your best on all lessons: <b style="color:var(--gold-2)">'+b+' / 20</b></p>':'')+'<div class="toolbar"><button class="btn gold" id="qz-go">Start quiz</button></div>';$('#qz-go').onclick=startQuiz}
+function startQuiz(){var f=$('#qz-filter').value;QZ={list:shuffle(QUIZ.filter(function(q){return f==='all'||q.l===+f})),i:0,score:0,f:f};showQ()}
+function showQ(){var host=$('#qz-body');
+  if(QZ.i>=QZ.list.length){var n=QZ.list.length;if(QZ.f==='all'){state.best.all=Math.max(state.best.all||0,QZ.score);save()}
+    host.innerHTML='<div class="eyebrow">Result</div><div class="score" style="margin-top:8px">'+QZ.score+' / '+n+'</div><p style="margin-top:10px">'+(QZ.score===n?'Every answer right.':QZ.score>=n*0.7?'Solid understanding. Review the explanations you missed.':'Worth another pass through the lessons and labs.')+'</p><div class="toolbar"><button class="btn gold" id="qz-re">Try again</button><button class="btn" data-go="lessons">Back to lessons</button></div>';$('#qz-re').onclick=startQuiz;return}
+  var q=QZ.list[QZ.i];host.innerHTML='<div class="qzhead" style="margin-bottom:12px"><span class="eyebrow">Question '+(QZ.i+1)+' of '+QZ.list.length+' · Lesson '+(q.l+1)+'</span><span class="mono muted" style="font-size:13px">score '+QZ.score+'</span></div><div class="bar" style="margin-bottom:18px"><i style="width:'+(QZ.i/QZ.list.length*100)+'%"></i></div><div id="qz-q"></div><div class="toolbar"><button class="btn gold" id="qz-next" hidden>'+(QZ.i<QZ.list.length-1?'Next →':'See result')+'</button></div>';
+  renderQ(q,$('#qz-q'),function(ok){if(ok)QZ.score++;$('#qz-next').hidden=false;$('#qz-next').focus()});$('#qz-next').onclick=function(){QZ.i++;showQ()}}
+
+/* ---------------- ASK (offline retrieval) ---------------- */
+var STOP='a an the is are was were be been being of to in on for and or but with as at by from this that these those it its what how why when which who whom does do did can could would should will shall may might about into than then there their them they you your i me my we our us so if not no yes also just very much more most such any all each other some into over under between vs versus'.split(' ');
+var SYN={vit:'vision transformer patch',cnn:'convolution',mel:'spectrogram audio',sound:'audio',sounds:'audio',picture:'image',pictures:'image',photo:'image',photos:'image',movie:'video',film:'video',frames:'video frame',speech:'audio speech',voice:'audio speech',llm:'language model',fuse:'fusion',lidar:'point cloud 3d',ocr:'document text layout',pdf:'document',vector:'embedding',vectors:'embedding',backprop:'backpropagation gradient',clip:'contrastive image text',hallucinate:'hallucination',wrong:'weakness hallucination',limitations:'weakness',limits:'weakness',align:'alignment',aligned:'alignment',pair:'paired',pairs:'paired'};
+function stem(w){if(w.length>5&&/ing$/.test(w))return w.slice(0,-3);if(w.length>4&&/ed$/.test(w))return w.slice(0,-2);if(w.length>3&&/s$/.test(w)&&!/ss$/.test(w))return w.slice(0,-1);return w}
+function toks(s){var out=[];(s.toLowerCase().match(/[a-z0-9]+/g)||[]).forEach(function(w){if(STOP.indexOf(w)>=0)return;out.push(stem(w));if(SYN[w])SYN[w].split(' ').forEach(function(x){out.push(stem(x))})});return out}
+var KB=[],IDF={};
+function buildKB(){LESSONS.forEach(function(L,i){L.l.forEach(function(t,k){KB.push({title:'Lesson '+(i+1)+' · '+L.t,sub:LV[k],text:t,lesson:i})})});
+  GLOSS.forEach(function(g){KB.push({title:g[0],sub:'Glossary',text:g[0]+': '+g[1],lesson:null})});
+  MISC.forEach(function(m){KB.push({title:'Misconception: '+m[0],sub:'Lesson 10',text:'Misconception: "'+m[0]+'" Better: '+m[1],lesson:9})});
+  MODS.forEach(function(m){KB.push({title:m.name+' in the Modality Explorer',sub:'Modality',text:m.name+' — AI receives '+m.recv.toLowerCase()+' and represents it as '+m.repr.toLowerCase()+'. '+m.l[0]+' '+m.l[1],lesson:null,mod:MODS.indexOf(m)})});
+  var df={};KB.forEach(function(d){d.t=toks(d.text);d.tt=toks(d.title);var seen={};d.t.concat(d.tt).forEach(function(w){if(!seen[w]){seen[w]=1;df[w]=(df[w]||0)+1}})});
+  Object.keys(df).forEach(function(w){IDF[w]=Math.log(1+KB.length/df[w])})}
+function search(q){var qt=toks(q);if(!qt.length)return[];var qs={};qt.forEach(function(w){qs[w]=1});
+  return KB.map(function(d,i){var s=0;Object.keys(qs).forEach(function(w){var tf=0;d.t.forEach(function(x){if(x===w)tf++});var tb=d.tt.indexOf(w)>=0?2:0;if(tf||tb)s+=(Math.min(3,tf)+tb)*(IDF[w]||0)});
+    var lvB=d.sub===LV[state.level]?1.1:1;return{i:i,s:s/Math.sqrt(d.t.length+8)*10*lvB}}).filter(function(r){return r.s>0}).sort(function(a,b){return b.s-a.s})}
+var SUGG=['What is an embedding?','Why does video need more tokens than an image?','How is audio turned into a spectrogram?','What is contrastive learning?','What does a projector do?','Early vs late fusion?','Why do models miscount objects?','How are tables represented?'];
+function initAsk(){buildKB();
+  $('#ask-sugg').innerHTML=SUGG.map(function(s){return '<button>'+esc(s)+'</button>'}).join('');$$('#ask-sugg button').forEach(function(b){b.onclick=function(){ask(b.textContent)}});
+  $('#glos').innerHTML=GLOSS.map(function(g){return '<div><dt>'+esc(g[0])+'</dt><dd>'+esc(g[1])+'</dd></div>'}).join('');
+  $('#ask-form').onsubmit=function(e){e.preventDefault();var v=$('#ask-in').value.trim();if(v){ask(v);$('#ask-in').value=''}};
+  $('#ask-log').innerHTML='<div class="msg a">Ask anything covered in the ten lessons: modalities, embeddings, video, audio, alignment, training, architectures or limitations. I search the lesson text on your device and show the passage that answers it, with its source.<div class="src"><span class="tag real">Offline · no AI model</span></div></div>';
+}
+function ask(q){var log=$('#ask-log');log.insertAdjacentHTML('beforeend','<div class="msg u">'+esc(q)+'</div>');
+  var r=search(q),html;
+  if(!r.length||r[0].s<1.2){html='<div class="msg a">I could not find that in the lessons. This lab only answers from its own content, so it will not guess. Try rephrasing with terms like <i>embedding</i>, <i>spectrogram</i>, <i>tubelet</i>, <i>contrastive</i> or <i>fusion</i>, or pick a suggestion.<div class="src"><span class="tag">No match</span></div></div>'}
+  else{var d=KB[r[0].i],rel=[],seenT={};seenT[d.title]=1;r.slice(1).forEach(function(o){var k=KB[o.i];if(rel.length<3&&!seenT[k.title]&&o.s>r[0].s*0.35){seenT[k.title]=1;rel.push(o.i)}});
+    html='<div class="msg a">'+esc(d.text)+'<div class="src"><span>Source: '+esc(d.title)+' · '+esc(d.sub)+'</span>'+(d.lesson!=null?'<button class="btn sm" data-open="'+d.lesson+'">Open lesson</button>':'')+(d.mod!=null?'<button class="btn sm" data-mod="'+d.mod+'">Open in explorer</button>':'')+'</div>'+(rel.length?'<div class="rel">'+rel.map(function(i){return '<button class="chip" data-q="'+esc(KB[i].title)+'" data-kb="'+i+'">'+esc(KB[i].title.length>46?KB[i].title.slice(0,44)+'…':KB[i].title)+'</button>'}).join('')+'</div>':'')+'</div>'}
+  log.insertAdjacentHTML('beforeend',html);var last=log.lastElementChild;
+  $$('[data-open]',last).forEach(function(b){b.onclick=function(){state.lesson=+b.dataset.open;save();go('lessons')}});
+  $$('[data-mod]',last).forEach(function(b){b.onclick=function(){exMod=+b.dataset.mod;go('labs','explore')}});
+  $$('[data-kb]',last).forEach(function(b){b.onclick=function(){var d2=KB[+b.dataset.kb];log.insertAdjacentHTML('beforeend','<div class="msg a">'+esc(d2.text)+'<div class="src"><span>Source: '+esc(d2.title)+' · '+esc(d2.sub)+'</span></div></div>');log.lastElementChild.scrollIntoView({block:'nearest',behavior:reduce?'auto':'smooth'})}});
+  last.scrollIntoView({block:'nearest',behavior:reduce?'auto':'smooth'});
+}
+
+/* ---------------- RESIZE ---------------- */
+var rz=0;window.addEventListener('resize',function(){clearTimeout(rz);rz=setTimeout(function(){
+  if(cur.view==='home'){heroFit();if(reduce)drawHero(0,true)}
+  if(cur.view==='labs'){if(cur.lab==='explore'&&MODS[exMod].k!=='text'&&MODS[exMod].k!=='3d')drawExplorer();if(cur.lab==='embed')drawEmbed();if(cur.lab==='video')drawVideo();if(cur.lab==='train')drawTrain()}},150)});
+
+/* ---------------- PWA ---------------- */
+function pwa(){try{
+  var ic=document.createElement('canvas');ic.width=ic.height=512;var g=ic.getContext('2d');g.fillStyle='#0c0b09';g.fillRect(0,0,512,512);
+  var cols=['#d8bc7e','#7fb2cc','#d0907c','#9cc47f','#b9a0da','#78c7b2','#d9c56f','#d99fb6','#8ea5dc'];
+  cols.forEach(function(c,i){var a=-Math.PI/2+i*2*Math.PI/9,x1=256+180*Math.cos(a),y1=256+180*Math.sin(a);g.strokeStyle=c;g.globalAlpha=0.55;g.lineWidth=6;g.beginPath();g.moveTo(x1,y1);g.lineTo(256+70*Math.cos(a),256+70*Math.sin(a));g.stroke();g.globalAlpha=1;g.fillStyle=c;g.beginPath();g.arc(x1,y1,22,0,7);g.fill()});
+  g.strokeStyle='#d8bc7e';g.lineWidth=14;g.beginPath();g.arc(256,256,62,0,7);g.stroke();g.fillStyle='#f0dcae';g.beginPath();g.arc(256,256,22,0,7);g.fill();
+  var url=ic.toDataURL('image/png');
+  var man={name:'How AI Senses',short_name:'How AI Senses',description:'Offline lab on how multimodal AI learns from text, images, audio, video and more.',start_url:'./',scope:'./',display:'standalone',background_color:'#0c0b09',theme_color:'#0c0b09',icons:[{src:url,sizes:'512x512',type:'image/png',purpose:'any maskable'}]};
+  function add(tag,attrs){var el=document.createElement(tag);Object.keys(attrs).forEach(function(k){el.setAttribute(k,attrs[k])});document.head.appendChild(el)}
+  add('link',{rel:'manifest',href:'data:application/manifest+json,'+encodeURIComponent(JSON.stringify(man))});
+  add('link',{rel:'icon',href:url});add('link',{rel:'apple-touch-icon',href:url});
+  add('meta',{name:'theme-color',content:'#0c0b09'});add('meta',{name:'apple-mobile-web-app-capable',content:'yes'});
+  if('serviceWorker' in navigator&&/^https?:$/.test(location.protocol)&&!/claude|anthropic/.test(location.hostname))navigator.serviceWorker.register('./sw.js').catch(function(){});
+}catch(e){}}
+
+/* ---------------- BOOT ---------------- */
+initHome();setLevel(state.level|0);pwa();
+var h=(location.hash||'').replace('#','');
+if(h.indexOf('lab-')===0)go('labs',h.slice(4),true);else go(VIEWS.indexOf(h)>=0?h:'home',null,true);
+})();
+</script>
+
+</body>
+</html>
