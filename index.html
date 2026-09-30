@@ -69,6 +69,18 @@ nav.main a.on{color:var(--gold-ink);background:var(--gold)}
 .toast.show{opacity:1;transform:translate(-50%,0)}
 .toast b{color:var(--gold-2)}
 @media (max-width:860px){.toast{bottom:calc(76px + env(safe-area-inset-bottom,0px))}}
+.guide{border:1px solid var(--line-2);border-radius:12px;background:var(--surface);margin-bottom:16px}
+.guide summary{cursor:pointer;padding:12px 16px;font-weight:600;font-size:15px;color:var(--gold-2);list-style:none;display:flex;justify-content:space-between;align-items:center;gap:10px}
+.guide summary::-webkit-details-marker{display:none}
+.guide summary::after{content:"Show";font:500 11px var(--f-mono);letter-spacing:.1em;text-transform:uppercase;color:var(--faint)}
+.guide[open] summary::after{content:"Hide"}
+.guide .gbody{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);gap:14px 28px;padding:0 16px 16px}
+.guide h4{margin:0 0 8px;font:500 11px var(--f-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--faint)}
+.guide ul{margin:0;padding:0;list-style:none;display:grid;gap:8px;font-size:14.5px;line-height:1.5}
+.guide li{display:grid;grid-template-columns:22px minmax(0,1fr);gap:8px;align-items:start}
+.guide li i{font-style:normal;color:var(--gold);font-family:var(--f-mono);text-align:center}
+.guide li b{color:var(--fg)}
+@media (max-width:760px){.guide .gbody{grid-template-columns:1fr}}
 .depth{margin-top:16px;border:1px solid var(--line);border-left:3px solid var(--gold);border-radius:0 10px 10px 0;background:var(--surface);padding:12px 16px;font-size:15px;line-height:1.65;max-width:80ch}
 .depth .eyebrow{display:block;margin-bottom:4px}
 .depth.flash{animation:flash 1s ease}
@@ -86,7 +98,7 @@ nav.bottom a.on::before{content:"";position:absolute;top:0;left:30%;right:30%;he
   nav.bottom{display:flex}
   body{padding-bottom:calc(72px + env(safe-area-inset-bottom,0px))}
 }
-@media (max-width:420px){.brand b{font-size:15px;letter-spacing:.08em}.levels .l{display:none}.levels .s{display:inline}.levels button{padding:5px 9px}}
+@media (max-width:520px){.brand b{font-size:15px;letter-spacing:.08em}.levels .l{display:none}.levels .s{display:inline}.levels button{padding:5px 9px}.top .wrap{gap:10px}}
 
 section.view{padding-block:28px 40px}
 section.view[hidden]{display:none}
@@ -444,6 +456,7 @@ pre.diag{font:12.5px/1.6 var(--f-mono);color:var(--gold-2);background:var(--bg);
         <label for="vd-t">Frame <input type="range" id="vd-t" min="0" max="700" value="0"></label>
         <label><input type="checkbox" id="vd-single"> Single image only</label>
         <label><input type="checkbox" id="vd-sound"> Sound</label>
+        <span class="muted" id="vd-snd-hint" style="font-size:12.5px" hidden>The bell rings at frame 7. No sound? Turn off silent mode and raise the volume.</span>
       </div>
       <p class="lvtext" id="vd-say"></p>
     </div>
@@ -457,7 +470,25 @@ pre.diag{font:12.5px/1.6 var(--f-mono);color:var(--gold-2);background:var(--bg);
   </div>
 
   <div class="lab" id="lab-train" hidden>
-    <div class="labhead"><div><div class="eyebrow">Lab 5 · Training Simulator</div><h2>Predict → loss → gradient → update</h2><p>A tiny contrastive model learns a 2×2 projection that maps six image embeddings (squares) onto their matching text embeddings (circles). The loss, gradients and updates are computed for real, on toy data.</p></div><span class="tag real">Real math · toy data</span></div>
+    <div class="labhead"><div><div class="eyebrow">Lab 5 · Training Simulator</div><h2>Predict → loss → gradient → update</h2><p>Watch a tiny AI learn that a picture and a word mean the same thing. It has six pictures and six words, and only four adjustable numbers. Training tunes those numbers until every picture lands on its own word.</p></div><span class="tag real">Real math · toy data</span></div>
+    <details class="guide" id="tr-guide" open>
+      <summary>How to read this lab</summary>
+      <div class="gbody">
+        <div><h4>What you see</h4><ul>
+          <li><i>●</i><span><b>Circles are words</b> (dog, bike, rain…). They never move.</span></li>
+          <li><i>■</i><span><b>Squares are pictures</b> after passing through the model. They start in the wrong places. A <b>filled square</b> means that picture is currently matched to the right word.</span></li>
+          <li><i>▦</i><span><b>The grid</b> shows how sure the model is that each picture (row) goes with each word (column). The goal is a <b>bright diagonal</b>.</span></li>
+          <li><i>↘</i><span><b>Loss</b> is one number for how wrong the model is. It starts near the dashed <b>guessing line</b> (1.79, a random pick among six) and should fall toward 0.</span></li>
+          <li><i>①</i><span><b>The six pills</b> light up in order for each training step: take data, predict, score the error, work out the nudge, apply it, repeat.</span></li>
+        </ul></div>
+        <div><h4>Try this</h4><ul>
+          <li><i>1</i><span>Press <b>Reset</b>, then <b>One step</b> a few times. Watch the squares swing toward their circles.</span></li>
+          <li><i>2</i><span>Press <b>Train</b> and watch the loss curve drop and the grid's diagonal light up.</span></li>
+          <li><i>3</i><span>Reset and set <b>Learning rate</b> to maximum. Bigger nudges learn faster but can overshoot and wobble.</span></li>
+          <li><i>4</i><span>Raise <b>Temperature</b>. The model becomes less strict, so the grid stays blurrier and the loss stays higher.</span></li>
+        </ul></div>
+      </div>
+    </details>
     <div class="split">
       <div class="cvwrap"><canvas id="tr-cv" aria-label="Embedding space during training"></canvas></div>
       <div class="bench">
@@ -994,7 +1025,8 @@ function drawBike(x,px,py,s,ang,ring,col){
 function initVideo(){
   var sl=$('#vd-t');sl.oninput=function(){vdT=sl.value/100;drawVideo()};
   $('#vd-single').onchange=drawVideo;
-  $('#vd-play').onclick=function(){if(vdPlaying){stopVideo();return}if(vdT>=6.99)vdT=0;vdPlaying=true;$('#vd-play').textContent='Pause';var last=0;
+  $('#vd-sound').onchange=function(){unlockAudio();$('#vd-snd-hint').hidden=!this.checked;if(this.checked)play('bell')};
+  $('#vd-play').onclick=function(){unlockAudio();if(vdPlaying){stopVideo();return}if(vdT>=6.99)vdT=0;vdPlaying=true;$('#vd-play').textContent='Pause';var last=0;
     function loop(t){if(last)vdT=Math.min(7,vdT+(t-last)/700);last=t;$('#vd-t').value=Math.round(vdT*100);drawVideo();if(vdT>=7){stopVideo();return}vdRaf=requestAnimationFrame(loop)}vdRaf=requestAnimationFrame(loop)};
   var tc=$('#vd-track');var drag=false;function seek(e){var r=tc.getBoundingClientRect();var pt=e.touches?e.touches[0]:e;var u=(pt.clientX-r.left-70)/(r.width-82);vdT=Math.max(0,Math.min(7,u*8-0.5));$('#vd-t').value=Math.round(vdT*100);drawVideo()}
   tc.onpointerdown=function(e){drag=true;seek(e)};window.addEventListener('pointerup',function(){drag=false});tc.onpointermove=function(e){if(drag)seek(e)};
@@ -1009,7 +1041,7 @@ function drawVideo(){
   drawBike(x,px,py,s,-vxAt(vdT)*40,ring,'#eee8da');
   txt(x,'FRAME '+(single?'?':(fi+1)+' / 8'),10,14,'#eee8da',11);
   if(!single)txt(x,VEV[Math.min(7,fi)].toUpperCase(),w-10,14,'#f0dcae',11,'right');
-  if(ring&&$('#vd-sound').checked&&vdLastFrame<6&&fi>=6)play('bell');vdLastFrame=fi;
+  if($('#vd-sound').checked&&vdLastFrame>=0&&vdLastFrame<6&&fi>=6)play('bell');vdLastFrame=fi;
   $('#vd-trackwrap').hidden=single;
   if(!single){var tc=$('#vd-track');var G=fit(tc,0.3,190,230),y=G.x,W=G.w,H=G.h,L=70,R=12,cw=(W-L-R)/8,rows=[['FRAMES',0.05,0.3],['MOTION',0.38,0.2],['AUDIO',0.62,0.18],['EVENT',0.84,0.12]],fa=cv('--faint');
     y.clearRect(0,0,W,H);
@@ -1017,13 +1049,15 @@ function drawVideo(){
     for(var f=0;f<8;f++){var fx=L+f*cw,fy=H*0.05,fw=cw-4,fh=H*0.3;y.fillStyle='#4a6d8a';y.fillRect(fx,fy,fw,fh);y.fillStyle='#4a4946';y.fillRect(fx,fy+fh*0.7,fw,fh*0.3);y.fillStyle='#eee8da';y.beginPath();y.arc(fx+fw*VXS[f],fy+fh*0.6,Math.max(2,fw*0.07),0,7);y.fill();if(f===fi){y.strokeStyle=cv('--gold');y.lineWidth=2;y.strokeRect(fx-1,fy-1,fw+2,fh+2);y.lineWidth=1}
       if(f<7){var dxm=VXS[f+1]-VXS[f],bh=Math.min(1,dxm/0.14)*H*0.18;y.fillStyle=cv('--m-video');y.fillRect(fx+cw*0.5,H*0.58-bh,cw*0.5-2,Math.max(1,bh))}}
     var ay=H*0.71;y.strokeStyle=cv('--m-audio');y.beginPath();for(var i=0;i<=400;i++){var tt=i/400*8,v=0.06*Math.sin(i*1.7);if(tt>6.1)v+=Math.exp(-(tt-6.1)*1.4)*Math.sin(i*2.9)*0.9;var xx=L+(W-L-R)*i/400;if(i===0)y.moveTo(xx,ay-v*H*0.08);else y.lineTo(xx,ay-v*H*0.08)}y.stroke();
-    var segs=[[0,4,'riding','--m-image'],[4,5,'slowing','--m-video'],[5,6,'stopped','--muted'],[6,8,'bell','--m-audio']];segs.forEach(function(sg){y.fillStyle=cv(sg[3]);y.globalAlpha=0.3;y.fillRect(L+sg[0]*cw,H*0.84,(sg[1]-sg[0])*cw-3,H*0.12);y.globalAlpha=1;txt(y,sg[2],L+sg[0]*cw+5,H*0.9,cv('--fg'),9.5)});
+    var nw=cw<64,segs=[[0,4,'riding','--m-image'],[4,5,nw?'slow':'slowing','--m-video'],[5,6,nw?'stop':'stopped','--muted'],[6,8,'bell','--m-audio']];segs.forEach(function(sg){y.fillStyle=cv(sg[3]);y.globalAlpha=0.3;y.fillRect(L+sg[0]*cw,H*0.84,(sg[1]-sg[0])*cw-3,H*0.12);y.globalAlpha=1;txt(y,sg[2],L+sg[0]*cw+(nw?3:5),H*0.9,cv('--fg'),nw?8.5:9.5)});
     var ph=L+(vdT+0.5)*cw;y.strokeStyle=cv('--gold');y.lineWidth=1.5;y.beginPath();y.moveTo(ph,2);y.lineTo(ph,H-2);y.stroke();y.lineWidth=1;}
   $('#vd-say').innerHTML=single?'<b>One frame shows:</b> a child, a bicycle, a road, daylight. <b>It cannot show:</b> which way the bike is moving, whether it is speeding up or slowing down, whether the bell was rung, or what happens next.':'<b>Video adds:</b> motion (the motion bars shrink as the bike slows in frames 4–6), event order (it stops <i>before</i> the bell rings), and sound aligned to action (the audio burst lines up with the hand on the bell in frames 7–8). That is spatial + temporal information + context.';
 }
 
 /* ---- audio synth ---- */
-var AC=null;function ac(){if(!AC){var A=window.AudioContext||window.webkitAudioContext;if(!A)return null;AC=new A()}if(AC.state==='suspended')AC.resume();return AC}
+var AC=null;function ac(){if(!AC){var A=window.AudioContext||window.webkitAudioContext;if(!A)return null;try{if(navigator.audioSession)navigator.audioSession.type='playback'}catch(e){}AC=new A()}if(AC.state!=='running'){try{AC.resume()}catch(e){}}return AC}
+function unlockAudio(){try{var a=ac();if(!a)return;var b=a.createBuffer(1,1,22050),s=a.createBufferSource();s.buffer=b;s.connect(a.destination);s.start(0)}catch(e){}}
+['pointerdown','touchend','click','keydown'].forEach(function(ev){document.addEventListener(ev,function(){if(!AC||AC.state!=='running')unlockAudio()},{capture:true,passive:true})});
 function noiseBuf(a,sec){var b=a.createBuffer(1,a.sampleRate*sec,a.sampleRate),d=b.getChannelData(0);for(var i=0;i<d.length;i++)d[i]=Math.random()*2-1;return b}
 function play(kind){try{var a=ac();if(!a)return;var t=a.currentTime,out=a.createGain();out.gain.value=0.5;out.connect(a.destination);
   if(kind==='bell'){[2093,3140,4186].forEach(function(f,i){var o=a.createOscillator(),g=a.createGain();o.frequency.value=f;g.gain.setValueAtTime(0.3/(i+1),t);g.gain.exponentialRampToValueAtTime(0.001,t+1.1);o.connect(g);g.connect(out);o.start(t);o.stop(t+1.2)})}
@@ -1089,7 +1123,7 @@ function trForward(){var W=tr.W,Z=tr.X.map(function(x){return[W[0][0]*x[0]+W[0][
 function trStep(){var lr=+$('#tr-lr').value/100,tau=tr.tau,dW=[[0,0],[0,0]];
   for(var i=0;i<TRN;i++)for(var j=0;j<TRN;j++){var g=(tr.P[i][j]-(i===j?1:0))/TRN/tau;for(var a=0;a<2;a++)for(var b=0;b<2;b++)dW[a][b]+=g*tr.T[j][a]*tr.X[i][b]}
   for(var a2=0;a2<2;a2++)for(var b2=0;b2<2;b2++)tr.W[a2][b2]-=lr*dW[a2][b2];
-  tr.gn=Math.hypot(dW[0][0],dW[0][1],dW[1][0],dW[1][1]);tr.step++;trForward();tr.hist.push(tr.loss);if(tr.hist.length>400)tr.hist.shift()}
+  tr.gn=Math.hypot(dW[0][0],dW[0][1],dW[1][0],dW[1][1]);tr.step++;trForward();tr.hist.push(tr.loss);if(tr.hist.length>4000)tr.hist.shift()}
 var trRaf=0,trPlaying=false,trTimer=0;
 var TRS=['1 Data','2 Predict','3 Loss','4 Gradients','5 Update','6 Repeat'];
 function initTrain(){
@@ -1107,26 +1141,26 @@ function setStage(k){$$('#tr-stages span').forEach(function(s,i){s.classList.tog
 function animStages(done){var k=0;setStage(0);var iv=setInterval(function(){k++;if(k===4)done();if(k>5){clearInterval(iv);setStage(-1);return}setStage(k)},reduce?40:130)}
 function stopTrain(){if(trTimer)clearInterval(trTimer);trTimer=0;trPlaying=false;var b=$('#tr-play');if(b)b.textContent='Train'}
 function drawTrain(){
-  var c=$('#tr-cv');var F=fit(c,0.9,280,520),x=F.x,w=F.w,h=F.h,cx=w/2,cy=h/2,S=Math.min(w,h)/2-34;x.clearRect(0,0,w,h);
+  var c=$('#tr-cv');var F=fit(c,0.9,280,520),x=F.x,w=F.w,h=F.h,cx=w/2,cy=h/2-10,S=(Math.min(w,h-20)/2-22)/1.25;x.clearRect(0,0,w,h);
   x.strokeStyle=cv('--line');x.beginPath();x.arc(cx,cy,S,0,7);x.stroke();x.beginPath();x.moveTo(cx-S-10,cy);x.lineTo(cx+S+10,cy);x.moveTo(cx,cy-S-10);x.lineTo(cx,cy+S+10);x.stroke();
   var zs=tr.Z.map(function(z){var n=Math.hypot(z[0],z[1]);var k=Math.min(1.25,n)/(n||1);return[z[0]*k,z[1]*k]});
   tr.T.forEach(function(t,i){var tx=cx+t[0]*S,ty=cy+t[1]*S,z=zs[i],zx=cx+z[0]*S,zy=cy+z[1]*S,col=cv(TRC[i]);
     x.strokeStyle=col;x.globalAlpha=0.45;x.setLineDash([3,3]);x.beginPath();x.moveTo(tx,ty);x.lineTo(zx,zy);x.stroke();x.setLineDash([]);x.globalAlpha=1;
-    x.fillStyle=col;x.beginPath();x.arc(tx,ty,7,0,7);x.fill();txt(x,TRL[i],cx+t[0]*(S+20),cy+t[1]*(S+20),col,11,'center',cv('--f-body'));
+    x.fillStyle=col;x.beginPath();x.arc(tx,ty,7,0,7);x.fill();txt(x,TRL[i],cx+t[0]*(S-26),cy+t[1]*(S-26),col,12,'center',cv('--f-body'));
     x.fillStyle=cv('--bg');x.strokeStyle=col;x.lineWidth=2;x.fillRect(zx-6,zy-6,12,12);x.strokeRect(zx-6,zy-6,12,12);x.lineWidth=1;
     var ok=tr.P[i].indexOf(Math.max.apply(null,tr.P[i]))===i;if(ok){x.fillStyle=col;x.fillRect(zx-3,zy-3,6,6)}});
-  txt(x,'● text embedding (fixed)   ■ projected image embedding',10,h-10,cv('--faint'),10);
+  txt(x,'● word (fixed)   ■ picture (moves as it learns)',10,h-10,cv('--faint'),10.5,'left',cv('--f-body'));
   var m=$('#tr-mx');var G=fit(m,0.52,170,260),y=G.x,W=G.w,H=G.h;y.clearRect(0,0,W,H);
-  var ms=Math.min(H-30,W*0.45),cs=ms/TRN,mx0=26,my0=18;txt(y,'SIMILARITY → SOFTMAX',mx0,8,cv('--faint'),9.5);
-  for(var i=0;i<TRN;i++){y.globalAlpha=1;txt(y,TRL[i],mx0-4,my0+i*cs+cs/2,cv(TRC[i]),9,'right');for(var j=0;j<TRN;j++){y.fillStyle=i===j?cv('--gold'):cv('--m-image');y.globalAlpha=0.08+0.92*tr.P[i][j];y.fillRect(mx0+j*cs,my0+i*cs,cs-2,cs-2)}}y.globalAlpha=1;
-  txt(y,'image ↓ · text →',mx0,my0+ms+10,cv('--faint'),9);
+  y.font='10px '+cv('--f-mono');var lw0=Math.max.apply(null,TRL.map(function(l){return y.measureText(l).width}));var mx0=Math.ceil(lw0)+10,my0=18,ms=Math.min(H-34,W*0.45-mx0+20),cs=ms/TRN;txt(y,'MATCH CONFIDENCE',mx0,8,cv('--faint'),9.5);
+  for(var i=0;i<TRN;i++){y.globalAlpha=1;txt(y,TRL[i],mx0-5,my0+i*cs+cs/2,cv(TRC[i]),10,'right');for(var j=0;j<TRN;j++){y.fillStyle=i===j?cv('--gold'):cv('--m-image');y.globalAlpha=0.08+0.92*tr.P[i][j];y.fillRect(mx0+j*cs,my0+i*cs,cs-2,cs-2)}}y.globalAlpha=1;
+  txt(y,'picture ↓  word →',mx0,my0+ms+11,cv('--faint'),9);
   var lx=mx0+ms+24,lw=W-lx-8,lh=H-40,ly=my0,hs=tr.hist,mxL=Math.max(Math.log(TRN),hs[0]||1)*1.05;
-  txt(y,'LOSS',lx,8,cv('--faint'),9.5);y.strokeStyle=cv('--line');y.strokeRect(lx,ly,lw,lh);
-  var chance=ly+lh*(1-Math.log(TRN)/mxL);y.setLineDash([3,3]);y.beginPath();y.moveTo(lx,chance);y.lineTo(lx+lw,chance);y.stroke();y.setLineDash([]);txt(y,'chance ln 6',lx+lw-4,chance-7,cv('--faint'),8.5,'right');
+  txt(y,'LOSS (lower is better)',lx,8,cv('--faint'),9.5);y.strokeStyle=cv('--line');y.strokeRect(lx,ly,lw,lh);
+  var chance=ly+lh*(1-Math.log(TRN)/mxL);y.setLineDash([3,3]);y.beginPath();y.moveTo(lx,chance);y.lineTo(lx+lw,chance);y.stroke();y.setLineDash([]);txt(y,'guessing 1.79',lx+lw-4,chance-7,cv('--faint'),8.5,'right');txt(y,'step 0',lx,ly+lh+10,cv('--faint'),8.5);txt(y,'step '+tr.step,lx+lw,ly+lh+10,cv('--faint'),8.5,'right');
   y.beginPath();y.moveTo(lx,ly+lh);y.strokeStyle=cv('--gold');y.lineWidth=1.6;var n=hs.length;hs.forEach(function(v,k){var xx=lx+lw*(n<2?0:k/(n-1)),yy=ly+lh*(1-v/mxL);if(k===0)y.moveTo(xx,yy);else y.lineTo(xx,yy)});y.stroke();y.lineWidth=1;
   if(n){var ex=lx+lw,eyv=ly+lh*(1-hs[n-1]/mxL);y.fillStyle=cv('--gold');y.beginPath();y.arc(ex-1,eyv,3,0,7);y.fill()}
-  $('#tr-read').innerHTML='<span>step <b>'+tr.step+'</b></span><span>loss <b>'+tr.loss.toFixed(3)+'</b></span><span>correct matches <b>'+tr.acc+' / 6</b></span>'+(tr.gn!=null?'<span>|gradient| <b>'+tr.gn.toFixed(3)+'</b></span>':'');
-  $('#tr-say').innerHTML=tr.step===0?'<b>Step 0.</b> The projection is random, so image squares land in the wrong places and the similarity matrix has no clear diagonal. Press <b>One step</b> to watch one full pass: predict, measure the InfoNCE loss, compute gradients, update the 2×2 weights.':tr.acc===6&&tr.loss<0.3?'<b>Aligned.</b> Every image embedding is now most similar to its own text embedding, so the matrix is a bright diagonal. Try a higher temperature: the loss stays higher because the softmax is softer. Try a very high learning rate: training can overshoot and wobble.':'<b>Learning.</b> Each update moves the weights against the gradient. Squares rotate and stretch toward their circles, and the diagonal of the matrix brightens as loss falls below the chance level of ln 6 ≈ 1.79.';
+  $('#tr-read').innerHTML='<span>step <b>'+tr.step+'</b></span><span>loss <b>'+tr.loss.toFixed(3)+'</b></span><span>correct matches <b>'+tr.acc+' / 6</b></span>'+(tr.gn!=null?'<span>nudge size <b>'+tr.gn.toFixed(3)+'</b></span>':'');
+  $('#tr-say').innerHTML=tr.step===0?'<b>Step 0.</b> The four numbers are random, so the pictures (squares) land far from their words (circles) and the grid has no clear diagonal. Press <b>One step</b> to watch one round of learning, or <b>Train</b> to run many.':tr.acc===6&&tr.loss<0.3?'<b>Learned.</b> Every picture now points toward its own word, so all six squares are filled and the grid shows a bright diagonal. The nudge size is near zero because there is little left to fix. Reset and try a higher temperature or learning rate to see how training changes.':'<b>Learning.</b> Each round nudges the four numbers in the direction that reduces the error. The squares swing toward their circles, the diagonal brightens, and the loss falls below the guessing line.';
 }
 
 /* ---- Lab 6: Architecture ---- */
