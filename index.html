@@ -269,20 +269,31 @@ select{width:auto}
 
 /* architecture */
 .arch{display:grid;gap:16px}
-.palette{display:flex;flex-wrap:wrap;gap:8px;min-height:44px}
+.palette{display:flex;flex-wrap:wrap;gap:8px;min-height:44px;position:sticky;top:calc(61px + env(safe-area-inset-top,0px));z-index:6;background:var(--surface);padding-block:10px;margin-block:-10px}
+.arhint{font-size:13.5px;color:var(--muted);min-height:1.4em}
+.arhint b{color:var(--gold-2)}
 .blk{border:1px solid var(--line-2);background:var(--raise);border-radius:8px;padding:8px 11px;font-size:13px;font-weight:600;cursor:grab;user-select:none;touch-action:manipulation}
 .blk.sel{border-color:var(--gold);box-shadow:0 0 0 2px color-mix(in srgb,var(--gold) 35%,transparent)}
-.flow{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr) minmax(0,1fr);gap:12px;align-items:center}
-.col{display:grid;gap:8px}
+.flow{display:grid;grid-template-columns:minmax(0,1.5fr) 56px minmax(0,1fr);gap:12px;align-items:center}
+.rows{display:grid;gap:8px}
+.arow{display:grid;grid-template-columns:minmax(0,.75fr) 20px minmax(0,1.25fr);gap:8px;align-items:center}
+.arow .ar,.merge .ar,.rcol .ar{color:var(--faint);text-align:center;font-size:15px;line-height:1}
+.merge{display:grid;place-items:center;align-self:stretch;position:relative}
+.merge::before{content:"";position:absolute;left:0;top:22px;bottom:22px;width:14px;border:1.5px solid var(--line-2);border-left:0;border-radius:0 8px 8px 0}
+.merge .ar{position:relative;left:10px}
+.merge small{display:none}
+.rcol{display:grid;gap:6px}
 .inp{font:500 12px var(--f-mono);letter-spacing:.08em;text-transform:uppercase;color:var(--c);border:1px solid var(--line);border-radius:8px;padding:10px;background:var(--bg);text-align:center}
 .slot{min-height:44px;border:1.5px dashed var(--line-2);border-radius:8px;display:grid;place-items:center;padding:6px;font-size:12.5px;color:var(--faint);cursor:pointer;text-align:center;transition:border-color .2s,background .2s}
 .slot.hot{border-color:var(--gold);background:color-mix(in srgb,var(--gold) 8%,transparent)}
 .slot.filled{border-style:solid;color:var(--fg);font-weight:600;background:var(--raise)}
 .slot.ok{border-color:var(--ok)}.slot.no{border-color:var(--bad)}
-.slot.tall{min-height:120px}
+.slot.tall{min-height:72px}
 .flow.done .slot{animation:glow 1.6s ease-in-out infinite}
 @keyframes glow{50%{box-shadow:0 0 0 3px color-mix(in srgb,var(--gold) 30%,transparent)}}
-@media (max-width:640px){.flow{grid-template-columns:1fr}.slot.tall{min-height:56px}}
+@media (max-width:640px){.flow{grid-template-columns:1fr;gap:6px}.slot.tall{min-height:52px}
+  .merge{align-self:auto;padding:6px 0}.merge::before{display:none}.merge .ar{display:none}.merge small{display:block;font:500 10.5px var(--f-mono);letter-spacing:.1em;text-transform:uppercase;color:var(--faint);margin-top:4px}
+  .arow{grid-template-columns:minmax(0,.7fr) 16px minmax(0,1.3fr)}.arow .inp{font-size:10.5px;padding:10px 4px}}
 pre.diag{font:12.5px/1.6 var(--f-mono);color:var(--gold-2);background:var(--bg);border:1px solid var(--line);border-radius:9px;padding:14px;overflow-x:auto;margin:12px 0 0}
 
 /* ask */
@@ -511,9 +522,28 @@ pre.diag{font:12.5px/1.6 var(--f-mono);color:var(--gold-2);background:var(--bg);
   </div>
 
   <div class="lab" id="lab-arch" hidden>
-    <div class="labhead"><div><div class="eyebrow">Lab 6 · Architecture Builder</div><h2>Assemble a multimodal pipeline</h2><p>Drag each block into its slot, or tap a block and then tap a slot. Two blocks belong to training, not to this forward pipeline. Then compare fusion strategies.</p></div><span class="tag sim">Conceptual</span></div>
+    <div class="labhead"><div><div class="eyebrow">Lab 6 · Architecture Builder</div><h2>Assemble a multimodal pipeline</h2><p>Build the machine that lets one AI understand text, images, sound and video together. Put each part in the right place, then check your answer.</p></div><span class="tag sim">Conceptual</span></div>
+    <details class="guide" id="ar-guide" open>
+      <summary>How to read this lab</summary>
+      <div class="gbody">
+        <div><h4>What you see</h4><ul>
+          <li><i>▭</i><span><b>Blocks</b> at the top are the parts of a multimodal AI. Six belong in the pipeline; two do not.</span></li>
+          <li><i>→</i><span><b>Each row</b> is one kind of data: text, image, audio or video. It needs its own reader, called an <b>encoder</b>, in the dashed slot beside it.</span></li>
+          <li><i>⟩</i><span>All four encoders feed <b>one shared space</b>, where the projection translates them into a common format.</span></li>
+          <li><i>↓</i><span>A <b>language / reasoning model</b> reads that shared format and produces the answer, caption or action.</span></li>
+        </ul></div>
+        <div><h4>How to play</h4><ul>
+          <li><i>1</i><span><b>Tap a block</b>, then <b>tap a glowing slot</b> to place it. On a computer you can also drag it.</span></li>
+          <li><i>2</i><span>Tap a placed block to send it back if you change your mind.</span></li>
+          <li><i>3</i><span>Press <b>Check pipeline</b>. Green means right; red comes with a hint.</span></li>
+          <li><i>4</i><span><b>Trick:</b> Loss function and Optimizer are real parts of AI, but they only act during training, so they stay out.</span></li>
+          <li><i>5</i><span>Then explore <b>Fusion strategies</b> below: four real ways engineers combine data types.</span></li>
+        </ul></div>
+      </div>
+    </details>
     <div class="bench arch">
       <div class="palette" id="ar-pal" aria-label="Blocks"></div>
+      <p class="arhint" id="ar-hint"></p>
       <div class="flow" id="ar-flow"></div>
       <div class="toolbar" style="margin-top:0"><button class="btn sm gold" id="ar-check">Check pipeline</button><button class="btn sm" id="ar-reset">Reset</button><span class="muted" id="ar-msg" style="font-size:14px"></span></div>
     </div>
@@ -1175,7 +1205,11 @@ function renderArch(){
   $('#ar-pal').innerHTML=BLK.filter(function(b){return used.indexOf(b[0])<0}).map(function(b){return '<div class="blk'+(arSel===b[0]?' sel':'')+'" tabindex="0" role="button" data-b="'+b[0]+'" style="border-left:3px solid var('+b[2]+')">'+b[1]+'</div>'}).join('')||'<span class="muted" style="font-size:13px">All blocks placed. Two stay unused in a correct pipeline.</span>';
   function slot(id,label){var b=arPlaced[id];return '<div class="slot'+(b?' filled':'')+(id==='proj'||id==='llm'?' tall':'')+'" data-s="'+id+'" tabindex="0" role="button" aria-label="Slot: '+label+'">'+(b?esc(blkById(b)[1]):label)+'</div>'}
   $('#ar-flow').className='flow';
-  $('#ar-flow').innerHTML='<div class="col">'+SLOTS.map(function(s){return '<div class="inp" style="--c:var('+s[3]+')">'+s[1]+' input</div>'}).join('')+'</div><div class="col">'+SLOTS.map(function(s){return slot(s[0],'Drop '+s[1].toLowerCase()+' encoder')}).join('')+'</div><div class="col">'+slot('proj','Drop: shared representation')+slot('llm','Drop: reasoning stage')+'<div class="inp" style="--c:var(--gold)">Answer · caption · action</div></div>';
+  $('#ar-flow').innerHTML='<div class="rows">'+SLOTS.map(function(s){return '<div class="arow"><div class="inp" style="--c:var('+s[3]+')">'+s[1]+'</div><span class="ar" aria-hidden="true">→</span>'+slot(s[0],s[1]+' encoder goes here')+'</div>'}).join('')+'</div>'+
+    '<div class="merge" aria-hidden="true"><span class="ar">→</span><small>↓ all four combine ↓</small></div>'+
+    '<div class="rcol">'+slot('proj','Shared-space step goes here')+'<span class="ar" aria-hidden="true">↓</span>'+slot('llm','Reasoning step goes here')+'<span class="ar" aria-hidden="true">↓</span><div class="inp" style="--c:var(--gold)">Answer · caption · action</div></div>';
+  var left=Object.keys(arPlaced).length;
+  $('#ar-hint').innerHTML=arSel?'Now tap a glowing slot for <b>'+esc(blkById(arSel)[1])+'</b>.':left>=6?'All six slots are filled. Press <b>Check pipeline</b>.':'Tap a block, then tap the dashed slot where it belongs. '+left+' of 6 placed.';
   $$('#ar-pal .blk').forEach(function(el){
     var st=null,gh=null,hot=null;
     function slotAt(x,y){var t=document.elementFromPoint(x,y);return t&&t.closest?t.closest('#ar-flow .slot'):null}
