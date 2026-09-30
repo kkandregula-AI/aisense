@@ -153,6 +153,22 @@ canvas{display:block;width:100%}
 .big .row.hub{border-color:var(--gold);color:var(--gold-2)}
 .big .row.out{background:var(--gold);color:var(--gold-ink);border-color:var(--gold);font-weight:600}
 .big .ar{color:var(--faint);font-size:14px;line-height:1}
+.big button.row{position:relative;cursor:pointer;color:var(--fg);padding-inline:40px}
+.big button.row::after{content:"+";position:absolute;right:14px;top:50%;transform:translateY(-50%);font:500 16px var(--f-mono);color:var(--gold);transition:transform .2s}
+.big button.row.out::after{color:var(--gold-ink)}
+.big button.row:hover{border-color:var(--gold)}
+.big button.row.out:hover{background:var(--gold-2)}
+.big button.row[aria-expanded=true]{border-color:var(--gold);box-shadow:0 0 0 3px color-mix(in srgb,var(--gold) 22%,transparent)}
+.big button.row[aria-expanded=true]::after{transform:translateY(-50%) rotate(45deg)}
+.stinfo{width:min(100%,640px);text-align:left;background:var(--raise);border:1px solid var(--line-2);border-radius:10px;padding:14px 16px;display:grid;gap:10px;font-size:15px;line-height:1.6}
+.stinfo .ex{border-left:2px solid var(--gold);padding-left:12px;color:var(--muted);font-size:14.5px}
+.stinfo .ex b{color:var(--gold-2);font-weight:600}
+.stinfo .trio{display:grid;gap:8px}
+.stinfo .trio div{display:grid;grid-template-columns:96px minmax(0,1fr);gap:10px;align-items:baseline;font-size:14.5px}
+.stinfo .trio span.k{font:500 11px var(--f-mono);letter-spacing:.1em;text-transform:uppercase;color:var(--gold)}
+.stinfo .trio i{color:var(--muted)}
+@media (max-width:520px){.stinfo .trio div{grid-template-columns:1fr;gap:2px}}
+.bighint{text-align:center;font-size:13.5px;color:var(--faint);margin-bottom:12px}
 .note{border:1px dashed var(--line-2);border-radius:10px;padding:14px 16px;font-size:13.5px;color:var(--muted)}
 .note b{color:var(--fg)}
 footer.credit{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);font-size:12.5px;color:var(--faint);display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px}
@@ -405,15 +421,8 @@ pre.diag{font:12.5px/1.6 var(--f-mono);color:var(--gold-2);background:var(--bg);
 
   <div class="block">
     <header><div><div class="eyebrow">The whole picture</div><h2>From the real world to understanding</h2></div></header>
-    <div class="big">
-      <div class="row">REAL WORLD</div><div class="ar">↓</div>
-      <div class="row">TEXT · IMAGE · AUDIO · VIDEO · CODE · DOCUMENTS · TABLES · SENSORS · 3D</div><div class="ar">↓</div>
-      <div class="row">MODALITY-SPECIFIC PROCESSING / ENCODERS</div><div class="ar">↓</div>
-      <div class="row">REPRESENTATIONS / EMBEDDINGS</div><div class="ar">↓</div>
-      <div class="row hub">MULTIMODAL ALIGNMENT / INTEGRATION</div><div class="ar">↓</div>
-      <div class="row">LANGUAGE / REASONING / GENERATION</div><div class="ar">↓</div>
-      <div class="row out">UNDERSTAND · REASON · GENERATE</div>
-    </div>
+    <p class="bighint">Tap any stage to see what happens there.</p>
+    <div class="big" id="whole"></div>
   </div>
 
   <div class="block note"><b>Accuracy and trust.</b> Examples here are simplified conceptual models. Real multimodal systems differ in architecture, training objectives, data pipelines and deployment. Nothing in this app describes how any specific commercial model works. Each lab is labelled: <span class="tag real">Real math</span> means the numbers are actually computed; <span class="tag sim">Illustrative</span> means a hand-built picture of the idea. Everything runs offline in your browser, with no AI service and no cost.</div>
@@ -787,7 +796,30 @@ function initHome(){
   if(!reduce)setInterval(function(){if(cur.view!=='home')return;sp.forEach(function(s,i){s.classList.toggle('on',i===k)});k=(k+1)%sp.length},900);else sp[3].classList.add('on');
   $('#mgrid').innerHTML=MODS.map(function(m,i){return '<button class="mcard" style="--c:var('+m.c+')" data-mod="'+i+'"><b>'+m.name+'</b><span>Receives '+m.recv.toLowerCase()+'</span><code>→ '+m.repr+'</code></button>'}).join('');
   $$('#mgrid .mcard').forEach(function(b){b.onclick=function(){exMod=+b.dataset.mod;go('labs','explore')}});
+  renderWhole();
   $('#mis').innerHTML=MISC.map(function(m){return '<div><s>“'+esc(m[0])+'”</s><p>'+esc(m[1])+'</p></div>'}).join('');
+}
+var WHOLE=[
+ {t:'REAL WORLD',d:'Everything starts as something in the world: a scene, a sound, a page of text, a spreadsheet.',ex:'A child rides a bicycle down a road, stops, and rings the bell.',go:['lesson',0,'Lesson 1 · What Is Multimodal AI?']},
+ {t:'TEXT · IMAGE · AUDIO · VIDEO · CODE · DOCUMENTS · TABLES · SENSORS · 3D',d:'The world is captured as data, and each type has its own shape. Text is a sequence of words, an image is a grid of pixels, audio is a wave, and video is images over time.',ex:'The same moment can be a photo, a 10-second clip, a sound recording and the caption "A child rings a bicycle bell."',go:['lab','explore','Open the Modality Explorer']},
+ {t:'MODALITY-SPECIFIC PROCESSING / ENCODERS',d:'Each data type gets its own reader, called an encoder. It turns the raw input into numbers while keeping what matters about its structure.',ex:'A vision encoder cuts a 224 × 224 photo into 196 small patches and turns each patch into a list of numbers.',go:['lesson',3,'Lesson 4 · How Images Become Machine-Readable']},
+ {t:'REPRESENTATIONS / EMBEDDINGS',d:'What comes out of an encoder is an embedding: a list of numbers describing the input. Inputs with similar meaning get similar numbers.',ex:'The word "dog" and a photo of a dog end up as vectors that point in similar directions.',go:['lab','embed','Open the Embedding Visualizer']},
+ {t:'MULTIMODAL ALIGNMENT / INTEGRATION',hub:1,d:'Training lines up the different data types in one shared space, so a photo, its caption and a matching sound land close together.',ex:'Millions of photo-and-caption pairs teach the model which pictures go with which words. Mismatched pairs are pushed apart.',go:['lab','match','Try Cross-Modal Match']},
+ {t:'LANGUAGE / REASONING / GENERATION',d:'A language or reasoning model reads the aligned information and works out a response: words, a decision, or new content.',ex:'Given the video features and the question "What happened?", it writes an answer one word at a time.',go:['lab','arch','Open the Architecture Builder']},
+ {t:'UNDERSTAND · REASON · GENERATE',out:1,d:'This is what you finally see. Using the bicycle clip:',trio:[['Understand','"Describe this video."','A child rides a bicycle, stops, and rings the bell.'],['Reason','"Did the bike stop before the bell rang?"','Yes. It stopped first, then the bell rang.'],['Generate','"Write a short caption."','A quick stop and a cheerful ring.']],note:'These are illustrative answers. Real systems can also make mistakes, such as miscounting or getting the order of events wrong.',go:['lesson',9,'Lesson 10 · What Multimodal AI Can and Cannot Do']}
+];
+var wholeOpen=-1;
+function renderWhole(){
+  $('#whole').innerHTML=WHOLE.map(function(st,i){
+    var cls='row'+(st.hub?' hub':'')+(st.out?' out':'');
+    var h='<button class="'+cls+'" data-st="'+i+'" aria-expanded="'+(i===wholeOpen)+'" aria-controls="st-'+i+'">'+esc(st.t)+'</button>';
+    if(i===wholeOpen){h+='<div class="stinfo" id="st-'+i+'" role="region"><p>'+esc(st.d)+'</p>'+
+      (st.trio?'<div class="trio">'+st.trio.map(function(r){return '<div><span class="k">'+r[0]+'</span><span>'+esc(r[1])+' <i>→ '+esc(r[2])+'</i></span></div>'}).join('')+'</div><p class="muted" style="font-size:13px">'+esc(st.note)+'</p>':'<p class="ex"><b>Example.</b> '+esc(st.ex)+'</p>')+
+      '<div><button class="btn sm" data-stgo="'+i+'">'+esc(st.go[2])+' →</button></div></div>'}
+    if(i<WHOLE.length-1)h+='<div class="ar" aria-hidden="true">↓</div>';
+    return h}).join('');
+  $$('#whole [data-st]').forEach(function(b){b.onclick=function(){var i=+b.dataset.st;wholeOpen=wholeOpen===i?-1:i;renderWhole();var btn=$('#whole [data-st="'+i+'"]');if(btn)btn.focus({preventScroll:true})}});
+  $$('#whole [data-stgo]').forEach(function(b){b.onclick=function(){var g=WHOLE[+b.dataset.stgo].go;if(g[0]==='lesson'){state.lesson=g[1];save();go('lessons')}else go('labs',g[1])}});
 }
 var heroRaf=0,heroParts=[],heroF=null,heroLast=0;
 function heroFit(){var c=$('#hero-cv');heroF=fit(c,c.clientWidth<520?0.95:0.66,280,480)}
