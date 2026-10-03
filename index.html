@@ -251,7 +251,7 @@ select{width:auto}
 .readout{display:flex;flex-wrap:wrap;gap:8px 22px;font:13px var(--f-mono);color:var(--muted);margin-top:12px}
 .readout b{color:var(--fg);font-weight:500;font-variant-numeric:tabular-nums}
 .stages{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px}
-.stages span{font:500 11px var(--f-mono);letter-spacing:.08em;text-transform:uppercase;padding:6px 9px;border-radius:6px;border:1px solid var(--line-2);color:var(--faint);transition:all .15s}
+.stages span{font:500 11px var(--f-mono);letter-spacing:.08em;text-transform:uppercase;padding:6px 9px;border-radius:6px;border:1px solid var(--line-2);color:var(--faint)}
 .stages span.on{color:var(--gold-ink);background:var(--gold);border-color:var(--gold)}
 .nbrs{display:grid;gap:6px;margin-top:10px}
 .nbrs div{display:grid;grid-template-columns:minmax(0,1fr) 90px 44px;gap:10px;align-items:center;font-size:13.5px}
@@ -485,7 +485,7 @@ pre.diag{font:12.5px/1.6 var(--f-mono);color:var(--gold-2);background:var(--bg);
   </div>
 
   <div class="lab" id="lab-match" hidden>
-    <div class="labhead"><div><div class="eyebrow">Lab 4 · Cross-Modal Match</div><h2>Which one goes with this?</h2><p>Six rounds. Each shows an input in one modality; pick its match in another. Distractors are deliberately close, the way hard negatives are in training.</p></div><div class="dots" id="mt-dots"></div></div>
+    <div class="labhead"><div><div class="eyebrow">Lab 4 · Cross-Modal Match</div><h2>Which one goes with this?</h2><p>Six quick rounds. You see, hear or read something, then pick the one that matches it. The wrong answers are tricky on purpose: AI learns the most from near-misses.</p></div><div class="dots" id="mt-dots"></div></div>
     <div class="bench" id="mt-body"></div>
     <div class="depth" data-depth="match"></div>
   </div>
@@ -1136,20 +1136,20 @@ function play(kind){try{var a=ac();if(!a)return;var t=a.currentTime,out=a.create
 
 /* ---- Lab 4: Match ---- */
 var ROUNDS=[
- {from:'Image',to:'Text',anchor:'<div class="scene road">🧒🚲</div><p class="muted" style="font-size:13.5px">Photo: a child pedalling along a road, feet on the pedals, leaning forward.</p>',opts:[
-   ['A child is riding a bicycle.',1,'Matches the objects and the action: feet on pedals, leaning into motion.'],
-   ['A child is standing next to a parked bicycle.',0,'Same objects, different action. Hard negatives like this teach the model that the action matters, not just the nouns.'],
+ {from:'Image',to:'Text',anchor:'<canvas class="mtride" aria-label="Photo of a child riding a bicycle along a road"></canvas><p class="muted" style="font-size:13.5px">Photo: a child pedalling along a road, leaning forward.</p>',opts:[
+   ['A child is riding a bicycle.',1,'Right objects and the right action: the child is moving, feet on the pedals.'],
+   ['A child is standing next to a parked bicycle.',0,'Same objects, different action. Tricky near-misses like this teach the AI that what is happening matters, not just what is in the picture.'],
    ['An adult repairs a bicycle tyre.',0,'Shares "bicycle" but the person and the activity are wrong.']]},
  {from:'Audio',to:'Video',anchor:'<button class="play" data-snd="bell">▶ Play sound</button><p class="muted" style="font-size:13.5px">Sound clip · about 1 s · a bright metallic ring that fades quickly.</p>',opts:[
    ['Child brakes, then rings the handlebar bell',1,'A short, high, fast-decaying ring fits a small handlebar bell, and it happens right after stopping.'],
-   ['Church bells ring across a town square',0,'Also a bell, but church bells are lower, longer and repeat. The model must learn pitch and duration, not just "bell".'],
-   ['Rain begins falling on a tin roof',0,'Rain is broadband noise that builds up, with no clear pitch.']]},
+   ['Church bells ring across a town square',0,'Also a bell, but church bells are deeper, longer and repeat. The AI has to notice how a bell sounds, not just that it is a bell.'],
+   ['Rain begins falling on a tin roof',0,'Rain is a hiss with no clear note, and it builds up slowly.']]},
  {from:'Text',to:'Image',anchor:'<p style="font-size:17px;font-weight:500">“Waves roll in while a dog sprints along the shoreline.”</p>',opts:[
    ['<div class="scene beach small">🐕💨</div>',1,'Dog, water, sand and motion all match the sentence.'],
    ['<div class="scene home small">🐕🛋️</div>',0,'Right animal, wrong place. The caption names the shoreline and waves.'],
-   ['<div class="scene beach small">🐈</div>',0,'Right place, wrong animal. Alignment has to bind the subject and the setting together.']]},
+   ['<div class="scene beach small">🐈</div>',0,'Right place, wrong animal. The AI has to match both the animal and the place.']]},
  {from:'Video',to:'Audio',anchor:'<div class="frames"><div><div class="scene small">🌥️</div>frame 1</div><div><div class="scene small">🌧️</div>frame 2</div><div><div class="scene small">☂️☂️</div>frame 3</div></div><p class="muted" style="font-size:13.5px">Clip: grey sky, rain starts, umbrellas open.</p>',opts:[
-   ['Steady patter building to a heavy downpour <button class="play" data-snd="rain">▶ Play</button>',1,'The sound builds up just as the rain does across the frames. Temporal alignment matters, not only the topic.'],
+   ['Steady patter building to a heavy downpour <button class="play" data-snd="rain">▶ Play</button>',1,'The sound grows heavier just as the rain does across the frames. Matching how things change over time matters, not only the topic.'],
    ['Birdsong in a quiet garden <button class="play" data-snd="birds">▶ Play</button>',0,'Outdoor sound, but nothing in the clip suggests birds, and the scene gets louder over time.'],
    ['Car horns in heavy traffic <button class="play" data-snd="traffic">▶ Play</button>',0,'An outdoor street sound, but no cars appear in the frames.']]},
  {from:'Sensor',to:'Text',anchor:'<canvas id="mt-sensor" aria-label="Accelerometer trace with regular peaks about twice per second"></canvas><p class="muted" style="font-size:13.5px">Phone accelerometer, 5 seconds. Regular peaks about twice a second.</p>',opts:[
@@ -1157,7 +1157,7 @@ var ROUNDS=[
    ['A person sitting at a desk',0,'Sitting produces an almost flat signal with small drifts.'],
    ['A phone dropped on the floor',0,'A drop shows a brief free-fall followed by one large spike, not a rhythm.']]},
  {from:'Text',to:'Audio',anchor:'<p style="font-size:17px;font-weight:500">“Soft piano chords in a quiet room.”</p>',opts:[
-   ['<span>Clip A</span> <button class="play" data-snd="piano">▶ Play</button>',1,'Clear pitched notes forming chords, with a gentle decay. Harmonic structure is what the text describes.'],
+   ['<span>Clip A</span> <button class="play" data-snd="piano">▶ Play</button>',1,'Clear musical notes played together, fading gently. That is exactly what the words describe.'],
    ['<span>Clip B</span> <button class="play" data-snd="bell">▶ Play</button>',0,'Pitched and quiet, but a single metallic ring, not chords.'],
    ['<span>Clip C</span> <button class="play" data-snd="traffic">▶ Play</button>',0,'Low rumble and horns. The opposite of a quiet room.']]}
 ];
@@ -1169,6 +1169,10 @@ function renderMatch(){
   var R=ROUNDS[mtI],ord=mtOrder[mtI];
   $('#mt-body').innerHTML='<div class="eyebrow">Round '+(mtI+1)+' of '+ROUNDS.length+' · '+R.from+' → '+R.to+'</div><div class="match" style="margin-top:14px"><div class="anchor"><div class="tag">'+R.from+'</div>'+R.anchor+'</div><div><div class="tag" style="margin-bottom:10px">Pick the matching '+R.to.toLowerCase()+'</div><div class="mopts">'+ord.map(function(j){return '<div class="mopt" role="button" tabindex="0" data-j="'+j+'"><div>'+R.opts[j][0]+'</div><span class="why" hidden></span></div>'}).join('')+'</div><div class="toolbar"><button class="btn gold" id="mt-next" hidden>'+(mtI<ROUNDS.length-1?'Next round →':'See results')+'</button></div></div></div>';
   $$('#mt-body .play').forEach(function(b){b.onclick=function(e){e.stopPropagation();play(b.dataset.snd)}});
+  $$('#mt-body .mtride').forEach(function(rc){var F=fit(rc,0.56,150,320),g=F.x,w=F.w,h=F.h;var sk=g.createLinearGradient(0,0,0,h);sk.addColorStop(0,'#2d5577');sk.addColorStop(.7,'#a9c7da');sk.addColorStop(.701,'#55534f');sk.addColorStop(1,'#3e3d3a');g.fillStyle=sk;g.fillRect(0,0,w,h);
+    g.strokeStyle='rgba(255,255,255,.35)';g.setLineDash([12,10]);g.beginPath();g.moveTo(0,h*.86);g.lineTo(w,h*.86);g.stroke();g.setLineDash([]);
+    g.strokeStyle='rgba(255,255,255,.28)';g.lineWidth=2;[[.08,.5],[.14,.56],[.2,.62]].forEach(function(m){g.beginPath();g.moveTo(w*m[0],h*m[1]);g.lineTo(w*(m[0]+.12),h*m[1]);g.stroke()});
+    var sz=Math.min(h*.62,w*.34);drawBike(g,w*.56,h*.72-sz*.2,sz,-0.6,false,'#eee8da')});
   var sc2=$('#mt-sensor');if(sc2){var F=fit(sc2,0.35,90,140),x=F.x,w=F.w,h=F.h;x.strokeStyle=cv('--m-sensor');x.lineWidth=1.4;x.beginPath();for(var i=0;i<=300;i++){var t=i/60,v=Math.sin(2*Math.PI*2*t)*0.7+0.25*Math.sin(2*Math.PI*4*t+0.5)+0.05*Math.sin(i*1.3);var xx=w*i/300,yy=h/2-v*h*0.35;if(i===0)x.moveTo(xx,yy);else x.lineTo(xx,yy)}x.stroke()}
   function choose(el){if($('#mt-body').dataset.lock==='1')return;$('#mt-body').dataset.lock='1';var j=+el.dataset.j,ok=R.opts[j][1]===1;mtRes[mtI]=ok;
     $$('#mt-body .mopt').forEach(function(o){var k=+o.dataset.j;o.classList.add('done');o.removeAttribute('tabindex');var why=$('.why',o);why.hidden=false;why.textContent=R.opts[k][2];if(R.opts[k][1])o.classList.add('right');else if(k===j)o.classList.add('wrong')});
